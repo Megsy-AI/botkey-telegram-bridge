@@ -50,6 +50,9 @@ const ru: Dict = {
   verifyHoldings: "Проверить баланс", needWallet: "Сначала подключите кошелёк", insufficient: "Недостаточно ORAI",
   connectWallet: "Подключить кошелёк", deposit: "Пополнить", withdraw: "Вывести", amount: "Сумма", send: "Отправить",
   address: "Адрес", pending: "В обработке", price: "Цена", minWithdraw: "Минимальный вывод",
+  fee: "Комиссия", sent: "Отправлено", withdrawals: "Выводы", admin: "Админ", users: "Пользователи",
+  addTask: "Добавить задание", taskTitle: "Название задания", taskLink: "Ссылка", taskReward: "Награда (ORAI)", save: "Сохранить",
+  nft: "NFT", buyNft: "Купить NFT", nftSoon: "Коллекция NFT скоро появится", adminsOnly: "Только для админов",
   subscription: "Подписка Pro", subscribe: "Подписаться", subscribed: "Активна до",
   openInTelegram: "Откройте приложение в Telegram", demo: "Демо",
 };
@@ -62,6 +65,9 @@ const es: Dict = {
   verifyHoldings: "Verificar mis fondos", needWallet: "Conecta tu billetera", insufficient: "ORAI insuficiente",
   connectWallet: "Conectar billetera", deposit: "Depositar", withdraw: "Retirar", amount: "Cantidad", send: "Enviar",
   address: "Dirección", pending: "Pendiente", price: "Precio", minWithdraw: "Retiro mínimo",
+  fee: "Comisión", sent: "Enviado", withdrawals: "Retiros", admin: "Admin", users: "Usuarios",
+  addTask: "Añadir tarea", taskTitle: "Título de la tarea", taskLink: "Enlace", taskReward: "Recompensa (ORAI)", save: "Guardar",
+  nft: "NFT", buyNft: "Comprar NFT", nftSoon: "La colección NFT llegará pronto", adminsOnly: "Solo administradores",
   subscription: "Pro mensual", subscribe: "Suscribirse", subscribed: "Activo hasta",
   openInTelegram: "Abre la app en Telegram", demo: "Vista previa",
 };
