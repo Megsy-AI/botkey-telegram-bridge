@@ -1,0 +1,11 @@
+# ORAI roadmap
+- [x] Glass design, 5 tabs, Telegram fullscreen + back button + safe area
+- [x] 6h mining, tasks + referrals, power levels (pay with ORAI or verify on-chain holdings)
+- [x] Wallet: TON Connect, live ORAI/GRAM prices, deposit GRAM/ORAI, withdrawal requests
+- [x] Monthly Pro (5 GRAM, x2 mining) verified on-chain
+- [x] Bot /start in user's language with mascot banner + open-app button
+- [ ] Automatic withdrawal payouts — needs payout wallet recovery phrase (secret)
+- [ ] Credit deposits to in-app balance automatically
+- [ ] NFT mint on purchase — needs NFT collection decision
+- [ ] Daily AI posts to channel -1002616088306 — bot must be channel admin
+- [ ] Admin screen to add tasks
