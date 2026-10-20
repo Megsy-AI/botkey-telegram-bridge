@@ -1,11 +1,17 @@
-# ORAI roadmap
-- [x] Glass design, 5 tabs, Telegram fullscreen + back button + safe area
-- [x] 6h mining, tasks + referrals, power levels (pay with ORAI or verify on-chain holdings)
-- [x] Wallet: TON Connect, live ORAI/GRAM prices, deposit GRAM/ORAI, withdrawal requests
-- [x] Monthly Pro (5 GRAM, x2 mining) verified on-chain
-- [x] Bot /start in user's language with mascot banner + open-app button
-- [ ] Automatic withdrawal payouts — needs payout wallet recovery phrase (secret)
-- [ ] Credit deposits to in-app balance automatically
-- [ ] NFT mint on purchase — needs NFT collection decision
-- [ ] Daily AI posts to channel -1002616088306 — bot must be channel admin
-- [ ] Admin screen to add tasks
+# ORAI — خارطة الطريق
+
+## جاهز
+- التطبيق كامل: تعدين 6 ساعات، مهام، إحالات، قوة، محفظة، Pro، Swap
+- بوت @GamaCoinBot: رسالة /start بالغة المستخدم + زر فتح التطبيق (يحتاج نشر)
+
+## قيد التنفيذ
+- [ ] نشر التطبيق (Lovable publish) — رسالة /start تشتغل بعده
+- [ ] توكن Vercel: يُحفظ عبر النموذج الآمن (VERCEL_TOKEN) ثم نشر على Vercel
+- [ ] كلمات محفظة السحب: تُحفظ عبر النموذج الآمن (PAYOUT_WALLET_MNEMONIC) — المستخدم يكتبها بنفسه، لا تُقرأ من صورة أو شات
+- [ ] رسوم سحب 0.15 GRAM على كل عملية سحب
+- [ ] حساب أدمن @eIgiza + شاشة إدارة المهام
+- [ ] NFT: المستخدم ينشئ المجموعة، وعند شراء مستخدم يُسك NFT فورًا ويُرسل لمحفظته، والأرباح لمحفظة المالك (يحتاج كلمات محفظة السك أيضًا)
+- [ ] منشورات AI يومية للقناة -1002616088306 — البوت أصبح أدمن (تأكيد من المستخدم)، لا تنشر الآن
+
+## ملاحظات
+- توكن Vercel ظهر في الشات — يُنصح بإلغائه وإصدار جديد بعد الحفظ الآمن
