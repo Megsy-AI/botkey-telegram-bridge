@@ -5,7 +5,7 @@ import { ORAI_JETTON, PAYOUT_WALLET } from "./config";
 const client = new TonClient({ endpoint: "https://toncenter.com/api/v2/jsonRPC" });
 
 async function payoutWallet() {
-  const words = process.env.PAYOUT_WALLET_MNEMONIC;
+  const words = process.env["PAYOUT_WALLET_MNEMONIC"];
   if (!words) throw new Error("Payout wallet not configured");
   const key = await mnemonicToPrivateKey(words.trim().split(/\s+/));
   const wallet = WalletContractV4.create({ workchain: 0, publicKey: key.publicKey });
