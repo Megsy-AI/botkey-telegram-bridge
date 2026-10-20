@@ -21,6 +21,7 @@ export type Database = {
           item_index: number | null
           nft_address: string | null
           price_gram: number
+          tx_hash: string | null
           user_id: number
         }
         Insert: {
@@ -29,6 +30,7 @@ export type Database = {
           item_index?: number | null
           nft_address?: string | null
           price_gram?: number
+          tx_hash?: string | null
           user_id: number
         }
         Update: {
@@ -37,6 +39,7 @@ export type Database = {
           item_index?: number | null
           nft_address?: string | null
           price_gram?: number
+          tx_hash?: string | null
           user_id?: number
         }
         Relationships: []

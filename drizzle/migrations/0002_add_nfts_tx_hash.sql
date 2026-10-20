@@ -1,0 +1,1 @@
+ALTER TABLE public.nfts ADD COLUMN tx_hash text;

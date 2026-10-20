@@ -15,6 +15,13 @@
       "when": 1792539545864,
       "tag": "0001_add_withdrawal_fee_tx_and_nfts",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792539622036,
+      "tag": "0002_add_nfts_tx_hash",
+      "breakpoints": true
     }
   ]
 }

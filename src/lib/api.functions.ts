@@ -232,3 +232,82 @@ export const verifySubscription = createServerFn({ method: "POST" })
     await db.from("tg_users").update({ subscribed_until: until }).eq("id", user.id);
     return { subscribed_until: until };
   });
+
+// ============= Admin =============
+
+async function adminCtx(initData: string) {
+  const c = await ctx(initData);
+  if (!ADMIN_USERNAMES.includes((c.user.username ?? "").toLowerCase())) throw new Error("Forbidden");
+  return c;
+}
+
+export const adminOverview = createServerFn({ method: "POST" })
+  .inputValidator(auth)
+  .handler(async ({ data }) => {
+    const { db } = await adminCtx(data.initData);
+    const [users, withdrawals, tasks, nfts] = await Promise.all([
+      db.from("tg_users").select("id, balance"),
+      db.from("withdrawals").select("*").order("created_at", { ascending: false }).limit(50),
+      db.from("tasks").select("*").order("sort"),
+      db.from("nfts").select("id"),
+    ]);
+    const list = (users.data ?? []) as { balance: number }[];
+    return {
+      users: list.length,
+      totalBalance: list.reduce((s, u) => s + Number(u.balance), 0),
+      withdrawals: withdrawals.data ?? [],
+      tasks: tasks.data ?? [],
+      nfts: (nfts.data ?? []).length,
+    };
+  });
+
+export const adminAddTask = createServerFn({ method: "POST" })
+  .inputValidator((i: Auth & { title: string; link: string; reward: number }) => ({
+    ...auth(i), title: String(i.title).slice(0, 120), link: String(i.link).slice(0, 300), reward: Number(i.reward),
+  }))
+  .handler(async ({ data }) => {
+    const { db } = await adminCtx(data.initData);
+    if (!data.title || !(data.reward > 0)) throw new Error("Invalid task");
+    const { error } = await db.from("tasks").insert({ title: data.title, link: data.link, reward: data.reward });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminToggleTask = createServerFn({ method: "POST" })
+  .inputValidator((i: Auth & { taskId: string; active: boolean }) => ({ ...auth(i), taskId: String(i.taskId), active: !!i.active }))
+  .handler(async ({ data }) => {
+    const { db } = await adminCtx(data.initData);
+    const { error } = await db.from("tasks").update({ active: data.active }).eq("id", data.taskId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ============= NFT =============
+
+/** Buys an NFT: verifies the on-chain payment, then mints the next item straight to the buyer's wallet. */
+export const buyNft = createServerFn({ method: "POST" })
+  .inputValidator(auth)
+  .handler(async ({ data }) => {
+    if (!NFT_COLLECTION_ADDRESS) throw new Error("NFT collection is not available yet");
+    const { user, db } = await ctx(data.initData);
+    const me = await loadUser(db, user.id);
+    if (!me.wallet_address) throw new Error("Connect your wallet first");
+    const tx = await findPayment(`nft:${user.id}`, NFT_PRICE_GRAM * 1e9);
+    if (!tx) throw new Error("Payment not found yet, try again in a minute");
+    const { data: used } = await db.from("nfts").select("id").eq("tx_hash", tx.hash).maybeSingle();
+    if (used) throw new Error("This payment was already used");
+    const { count } = await db.from("nfts").select("id", { count: "exact", head: true });
+    const itemIndex = count ?? 0;
+    const { mintNft } = await import("./payout.server");
+    await mintNft(NFT_COLLECTION_ADDRESS, itemIndex, me.wallet_address);
+    await db.from("nfts").insert({ user_id: user.id, item_index: itemIndex, price_gram: NFT_PRICE_GRAM, tx_hash: tx.hash });
+    return { itemIndex };
+  });
+
+export const myNfts = createServerFn({ method: "POST" })
+  .inputValidator(auth)
+  .handler(async ({ data }) => {
+    const { user, db } = await ctx(data.initData);
+    const { data: rows } = await db.from("nfts").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+    return { nfts: rows ?? [], collection: NFT_COLLECTION_ADDRESS, price: NFT_PRICE_GRAM };
+  });
