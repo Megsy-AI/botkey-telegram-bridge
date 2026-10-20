@@ -12,9 +12,9 @@ export const Route = createFileRoute("/power")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "ORAI Mining — Power" },
+      { title: "Orange — Power" },
       { name: "description", content: "Upgrade your mining power from 0.1 to 10,000 ORAI per day." },
-      { property: "og:title", content: "ORAI Mining Power" },
+      { property: "og:title", content: "Orange Power" },
       { property: "og:description", content: "Upgrade your mining power from 0.1 to 10,000 ORAI per day." },
     ],
   }),

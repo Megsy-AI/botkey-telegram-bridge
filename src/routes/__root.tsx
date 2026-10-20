@@ -81,9 +81,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
             { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" },
-      { title: "ORAI Mining" },
+      { title: "Orange" },
       { name: "description", content: "Mine ORAI on TON inside Telegram." },
-      { property: "og:title", content: "ORAI Mining" },
+      { property: "og:title", content: "Orange" },
       { property: "og:description", content: "Mine ORAI on TON inside Telegram." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
