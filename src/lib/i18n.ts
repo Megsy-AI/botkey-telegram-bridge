@@ -4,6 +4,8 @@ const keys = [
   "tasksTab", "referralsTab", "start", "done", "inviteFriends", "inviteText", "copyLink", "copied", "friends",
   "miningPower", "perDay", "current", "unlock", "buyOnSton", "verifyHoldings", "needWallet", "insufficient",
   "connectWallet", "deposit", "withdraw", "amount", "send", "address", "pending", "price", "minWithdraw",
+  "fee", "sent", "withdrawals", "admin", "users", "addTask", "taskTitle", "taskLink", "taskReward", "save",
+  "nft", "buyNft", "nftSoon", "adminsOnly",
   "subscription", "subscribe", "subscribed", "openInTelegram", "demo",
 ] as const;
 export type TKey = (typeof keys)[number];
@@ -18,6 +20,9 @@ const en: Dict = {
   verifyHoldings: "Verify my holdings", needWallet: "Connect your wallet first", insufficient: "Not enough ORAI",
   connectWallet: "Connect wallet", deposit: "Deposit", withdraw: "Withdraw", amount: "Amount", send: "Send",
   address: "Address", pending: "Pending", price: "Price", minWithdraw: "Minimum withdrawal",
+  fee: "Fee", sent: "Sent", withdrawals: "Withdrawals", admin: "Admin", users: "Users",
+  addTask: "Add task", taskTitle: "Task title", taskLink: "Link", taskReward: "Reward (ORAI)", save: "Save",
+  nft: "NFT", buyNft: "Buy NFT", nftSoon: "The NFT collection is coming soon", adminsOnly: "Admins only",
   subscription: "Monthly Pro", subscribe: "Subscribe", subscribed: "Active until",
   openInTelegram: "Open this app inside Telegram to save progress", demo: "Preview mode",
 };
@@ -30,6 +35,9 @@ const ar: Dict = {
   verifyHoldings: "تحقق من رصيدي", needWallet: "اربط محفظتك أولاً", insufficient: "رصيد ORAI غير كافٍ",
   connectWallet: "ربط المحفظة", deposit: "إيداع", withdraw: "سحب", amount: "المبلغ", send: "إرسال",
   address: "العنوان", pending: "قيد المعالجة", price: "السعر", minWithdraw: "الحد الأدنى للسحب",
+  fee: "الرسوم", sent: "تم الإرسال", withdrawals: "السحوبات", admin: "الإدارة", users: "المستخدمون",
+  addTask: "إضافة مهمة", taskTitle: "عنوان المهمة", taskLink: "الرابط", taskReward: "المكافأة (ORAI)", save: "حفظ",
+  nft: "NFT", buyNft: "شراء NFT", nftSoon: "مجموعة الـ NFT قادمة قريبًا", adminsOnly: "للمشرفين فقط",
   subscription: "الاشتراك الشهري", subscribe: "اشترك", subscribed: "فعال حتى",
   openInTelegram: "افتح التطبيق داخل تليجرام لحفظ تقدمك", demo: "وضع المعاينة",
 };
