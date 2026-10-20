@@ -8,7 +8,7 @@ import { useStore } from "@/lib/store";
 import {
   getMarket, walletBalances, setWallet, requestWithdraw, verifySubscription, SUB_PRICE_GRAM,
 } from "@/lib/api.functions";
-import { MIN_WITHDRAW, RECEIVE_WALLET } from "@/lib/config";
+import { MIN_WITHDRAW, RECEIVE_WALLET, WITHDRAW_FEE_GRAM } from "@/lib/config";
 import { commentPayload, fmt, oraiTransferMessage } from "@/lib/ton";
 import { haptic } from "@/lib/telegram";
 import { Card, CoinIcon, GhostButton, GRAM_ICON, ORAI_ICON, PrimaryButton, Title } from "@/components/ui-kit";
@@ -63,10 +63,19 @@ function WalletPage() {
         toast(t("pending"));
       } else {
         if (demo) { toast(t("openInTelegram")); return; }
+        // 1) pay the withdrawal fee on-chain
+        await tc.sendTransaction({
+          validUntil: Math.floor(Date.now() / 1000) + 600,
+          messages: [{ address: RECEIVE_WALLET, amount: toNano(WITHDRAW_FEE_GRAM.toString()).toString(), payload: commentPayload(`fee:${me.id}`) }],
+        });
+        toast(t("pending"));
+        // 2) the server verifies the fee and sends the ORAI automatically
+        await new Promise((r) => setTimeout(r, 12000));
         const r = await requestWithdraw({ data: { initData, amount: n } });
         setData((d) => d && { ...d, me: { ...d.me, balance: r.balance }, withdrawals: [
-          { id: crypto.randomUUID(), amount: n, status: "pending", created_at: new Date().toISOString(), to_address: address } as any,
+          { id: crypto.randomUUID(), amount: n, status: "sent", created_at: new Date().toISOString(), to_address: address } as any,
           ...d.withdrawals] });
+        toast.success(t("sent"));
       }
       haptic("success");
       setAmount("");
@@ -143,7 +152,7 @@ function WalletPage() {
         <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
           placeholder={`${t("amount")} (${mode === "withdraw" ? "ORAI" : coin})`}
           className="h-14 w-full rounded-2xl bg-card px-4 text-lg outline-none placeholder:text-muted-foreground" />
-        {mode === "withdraw" && <div className="mt-2 text-xs text-muted-foreground">{t("minWithdraw")}: {MIN_WITHDRAW} ORAI</div>}
+        {mode === "withdraw" && <div className="mt-2 text-xs text-muted-foreground">{t("minWithdraw")}: {MIN_WITHDRAW} ORAI · {t("fee")}: {WITHDRAW_FEE_GRAM} GRAM</div>}
         <PrimaryButton className="mt-3" onClick={submit} disabled={busy}>
           {!address ? t("connectWallet") : mode === "deposit" ? t("deposit") : t("withdraw")}
         </PrimaryButton>
@@ -167,7 +176,7 @@ function WalletPage() {
           {data!.withdrawals.map((w: any) => (
             <div key={w.id} className="flex justify-between border-t border-muted py-2 text-sm first:border-0">
               <span>{fmt(w.amount)} ORAI</span>
-              <span className="text-muted-foreground">{w.status === "pending" ? t("pending") : w.status}</span>
+              <span className="text-muted-foreground">{w.status === "pending" ? t("pending") : w.status === "sent" ? t("sent") : w.status}</span>
             </div>
           ))}
         </Card>
