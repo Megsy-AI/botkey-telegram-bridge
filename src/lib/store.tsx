@@ -25,6 +25,7 @@ const demoData = (lang: string): Data => ({
     balance: 0, power_level: 0, mining_started_at: null, wallet_address: null, referred_by: null,
     subscribed_until: null, created_at: new Date().toISOString(),
   } as any,
+  isAdmin: false,
   tasks: [], done: [], referrals: [], withdrawals: [],
 });
 

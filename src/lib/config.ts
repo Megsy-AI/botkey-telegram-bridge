@@ -9,6 +9,13 @@ export const MINING_HOURS = 6;
 export const REFERRAL_BONUS = 25;
 export const MIN_WITHDRAW = 100;
 export const DECIMALS = 9;
+/** Fee charged on every withdrawal, paid in GRAM to the receive wallet. */
+export const WITHDRAW_FEE_GRAM = 0.15;
+/** Telegram usernames (lowercase, no @) with access to the admin screen. */
+export const ADMIN_USERNAMES = ["eIgiza".toLowerCase()];
+/** NFT collection the owner creates; purchases mint an item straight to the buyer's wallet. */
+export const NFT_COLLECTION_ADDRESS = "";
+export const NFT_PRICE_GRAM = 1;
 
 /** Mining power levels: ORAI earned per day, and ORAI cost to unlock. */
 export const POWER_LEVELS = [0.1, 0.5, 1, 5, 10, 50, 100, 500, 1000, 5000, 10000].map(

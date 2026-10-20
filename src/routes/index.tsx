@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
@@ -6,7 +6,7 @@ import { startMining, claimMining } from "@/lib/api.functions";
 import { MINING_HOURS, POWER_LEVELS, sessionReward } from "@/lib/config";
 import { fmt } from "@/lib/ton";
 import { haptic } from "@/lib/telegram";
-import { CoinIcon, ORAI_ICON, PrimaryButton } from "@/components/ui-kit";
+import { Card, CoinIcon, ORAI_ICON, PrimaryButton } from "@/components/ui-kit";
 import mascot from "@/assets/orai-mascot.jpg.asset.json";
 
 export const Route = createFileRoute("/")({
@@ -81,6 +81,19 @@ function Home() {
         {fmt(Number(me.balance) + mined, 4)}
       </div>
       <div className="text-sm text-muted-foreground">ORAI</div>
+
+      <div className="mt-6 grid w-full grid-cols-2 gap-2">
+        <Link to="/nft">
+          <Card className="flex h-full items-center justify-center gap-2 py-3 text-sm">
+            <CoinIcon src={ORAI_ICON} className="size-5" /> NFT
+          </Card>
+        </Link>
+        {data!.isAdmin && (
+          <Link to="/admin">
+            <Card className="flex h-full items-center justify-center py-3 text-sm">{t("admin")}</Card>
+          </Link>
+        )}
+      </div>
 
       <div className="mt-auto w-full pt-10">
         {started && !done ? (
