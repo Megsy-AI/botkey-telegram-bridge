@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import {
   MINING_HOURS, POWER_LEVELS, REFERRAL_BONUS, MIN_WITHDRAW, ORAI_JETTON, GRAM_ADDRESS,
+  RECEIVE_WALLET, WITHDRAW_FEE_GRAM, ADMIN_USERNAMES, NFT_COLLECTION_ADDRESS, NFT_PRICE_GRAM,
   sessionReward, levelForHoldings,
 } from "./config";
 
@@ -52,6 +53,7 @@ export const bootstrap = createServerFn({ method: "POST" })
     ]);
     return {
       me,
+      isAdmin: ADMIN_USERNAMES.includes((user.username ?? "").toLowerCase()),
       tasks: tasks.data ?? [],
       done: (done.data ?? []).map((d: any) => d.task_id as string),
       referrals: refs.data ?? [],
