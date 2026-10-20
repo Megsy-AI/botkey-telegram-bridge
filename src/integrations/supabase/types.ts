@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      nfts: {
+        Row: {
+          created_at: string
+          id: string
+          item_index: number | null
+          nft_address: string | null
+          price_gram: number
+          user_id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_index?: number | null
+          nft_address?: string | null
+          price_gram?: number
+          user_id: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_index?: number | null
+          nft_address?: string | null
+          price_gram?: number
+          user_id?: number
+        }
+        Relationships: []
+      }
       task_completions: {
         Row: {
           created_at: string
@@ -122,6 +149,7 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          fee_tx: string | null
           id: string
           status: string
           to_address: string
@@ -131,6 +159,7 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string
+          fee_tx?: string | null
           id?: string
           status?: string
           to_address: string
@@ -140,6 +169,7 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          fee_tx?: string | null
           id?: string
           status?: string
           to_address?: string
