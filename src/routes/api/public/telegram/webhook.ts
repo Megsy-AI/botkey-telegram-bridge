@@ -33,8 +33,20 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
         const lang = pickLang(msg.from?.language_code);
         const s = START[lang] ?? START.en;
         const param = msg.text.split(" ")[1];
-        const appUrl = process.env.APP_URL || new URL(request.url).origin;
-        const url = param ? `${appUrl}/?tgWebAppStartParam=${encodeURIComponent(param)}` : appUrl;
+        const url = process.env.APP_URL || new URL(request.url).origin;
+        if (param?.startsWith("ref_") && msg.from?.id) {
+          const ref = Number(param.slice(4));
+          const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+          const { data: exists } = await db.from("tg_users").select("id").eq("id", msg.from.id).maybeSingle();
+          if (!exists && ref && ref !== msg.from.id) {
+            const { data: r } = await db.from("tg_users").select("balance").eq("id", ref).maybeSingle();
+            if (r) {
+              const { REFERRAL_BONUS } = await import("@/lib/config");
+              await db.from("tg_users").insert({ id: msg.from.id, first_name: msg.from.first_name ?? null, username: msg.from.username ?? null, language_code: msg.from.language_code ?? null, referred_by: ref });
+              await db.from("tg_users").update({ balance: Number(r.balance) + REFERRAL_BONUS }).eq("id", ref);
+            }
+          }
+        }
         const photo = `${new URL(request.url).origin}/start-banner.jpg`;
 
         const r = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
