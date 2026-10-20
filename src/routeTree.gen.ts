@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as NftRouteImport } from './routes/nft'
 import { Route as PowerRouteImport } from './routes/power'
 import { Route as SwapRouteImport } from './routes/swap'
 import { Route as TasksRouteImport } from './routes/tasks'
@@ -19,6 +21,16 @@ import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/publi
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NftRoute = NftRouteImport.update({
+  id: '/nft',
+  path: '/nft',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PowerRoute = PowerRouteImport.update({
@@ -50,6 +62,8 @@ const ApiPublicTelegramWebhookRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/nft': typeof NftRoute
   '/power': typeof PowerRoute
   '/swap': typeof SwapRoute
   '/tasks': typeof TasksRoute
@@ -58,6 +72,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/nft': typeof NftRoute
   '/power': typeof PowerRoute
   '/swap': typeof SwapRoute
   '/tasks': typeof TasksRoute
@@ -67,6 +83,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/nft': typeof NftRoute
   '/power': typeof PowerRoute
   '/swap': typeof SwapRoute
   '/tasks': typeof TasksRoute
@@ -77,6 +95,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
+    | '/nft'
     | '/power'
     | '/swap'
     | '/tasks'
@@ -85,6 +105,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
+    | '/nft'
     | '/power'
     | '/swap'
     | '/tasks'
@@ -93,6 +115,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
+    | '/nft'
     | '/power'
     | '/swap'
     | '/tasks'
@@ -102,6 +126,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  NftRoute: typeof NftRoute
   PowerRoute: typeof PowerRoute
   SwapRoute: typeof SwapRoute
   TasksRoute: typeof TasksRoute
@@ -116,6 +142,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nft': {
+      id: '/nft'
+      path: '/nft'
+      fullPath: '/nft'
+      preLoaderRoute: typeof NftRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/power': {
@@ -158,6 +198,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  NftRoute: NftRoute,
   PowerRoute: PowerRoute,
   SwapRoute: SwapRoute,
   TasksRoute: TasksRoute,
