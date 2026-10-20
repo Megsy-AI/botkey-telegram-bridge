@@ -13,9 +13,9 @@ export const Route = createFileRoute("/")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "ORAI Mining — Home" },
+      { title: "Orange — Home" },
       { name: "description", content: "Start a 6-hour ORAI mining session and watch your balance grow." },
-      { property: "og:title", content: "ORAI Mining" },
+      { property: "og:title", content: "Orange" },
       { property: "og:description", content: "Start a 6-hour ORAI mining session and watch your balance grow." },
     ],
   }),

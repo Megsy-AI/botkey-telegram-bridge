@@ -12,7 +12,7 @@ export const Route = createFileRoute("/tasks")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "ORAI Mining — Tasks" },
+      { title: "Orange — Tasks" },
       { name: "description", content: "Complete tasks and invite friends to earn ORAI." },
       { property: "og:title", content: "ORAI Tasks" },
       { property: "og:description", content: "Complete tasks and invite friends to earn ORAI." },

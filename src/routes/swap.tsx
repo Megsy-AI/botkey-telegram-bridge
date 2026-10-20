@@ -5,7 +5,7 @@ export const Route = createFileRoute("/swap")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "ORAI Mining — Swap" },
+      { title: "Orange — Swap" },
       { name: "description", content: "Buy ORAI with GRAM on STON.fi." },
       { property: "og:title", content: "Swap GRAM to ORAI" },
       { property: "og:description", content: "Buy ORAI with GRAM on STON.fi." },

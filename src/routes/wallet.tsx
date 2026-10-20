@@ -17,7 +17,7 @@ export const Route = createFileRoute("/wallet")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "ORAI Mining — Wallet" },
+      { title: "Orange — Wallet" },
       { name: "description", content: "Connect your TON wallet, deposit GRAM or ORAI, and withdraw ORAI." },
       { property: "og:title", content: "ORAI Wallet" },
       { property: "og:description", content: "Connect your TON wallet, deposit GRAM or ORAI, and withdraw ORAI." },

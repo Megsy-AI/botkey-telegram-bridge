@@ -10,7 +10,7 @@ export const Route = createFileRoute("/admin")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "ORAI Mining — Admin" },
+      { title: "Orange — Admin" },
       { name: "description", content: "ORAI admin: stats, withdrawals and task management." },
       { property: "og:title", content: "ORAI Admin" },
       { property: "og:description", content: "ORAI admin: stats, withdrawals and task management." },

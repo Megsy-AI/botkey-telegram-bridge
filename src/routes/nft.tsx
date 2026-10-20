@@ -15,7 +15,7 @@ export const Route = createFileRoute("/nft")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "ORAI Mining — NFT" },
+      { title: "Orange — NFT" },
       { name: "description", content: "Buy an ORAI NFT — minted instantly to your wallet." },
       { property: "og:title", content: "ORAI NFT" },
       { property: "og:description", content: "Buy an ORAI NFT — minted instantly to your wallet." },
