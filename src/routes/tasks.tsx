@@ -36,7 +36,7 @@ function Tasks() {
       setOpened((o) => ({ ...o, [task.id]: true }));
       return;
     }
-    if (demo) return toast(t("openInTelegram"));
+    if (demo) { toast(t("openInTelegram")); return; }
     try {
       const r = await completeTask({ data: { initData, taskId: task.id } });
       setData((d) => d && { ...d, me: { ...d.me, balance: r.balance }, done: [...d.done, task.id] });

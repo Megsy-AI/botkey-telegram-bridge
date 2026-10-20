@@ -27,7 +27,7 @@ function Power() {
   const [busy, setBusy] = useState<number | "verify" | null>(null);
 
   async function buy(level: number) {
-    if (demo) return toast(t("openInTelegram"));
+    if (demo) { toast(t("openInTelegram")); return; }
     setBusy(level);
     try {
       const r = await upgradePower({ data: { initData, level } });
@@ -35,8 +35,8 @@ function Power() {
     } catch (e: any) { toast.error(e.message); } finally { setBusy(null); }
   }
   async function verify() {
-    if (demo) return toast(t("openInTelegram"));
-    if (!me.wallet_address) return toast(t("needWallet"));
+    if (demo) { toast(t("openInTelegram")); return; }
+    if (!me.wallet_address) { toast(t("needWallet")); return; }
     setBusy("verify");
     try {
       const r = await verifyHoldings({ data: { initData } });

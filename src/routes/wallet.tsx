@@ -51,7 +51,7 @@ function WalletPage() {
   async function submit() {
     const n = Number(amount);
     if (!(n > 0)) return;
-    if (!address) return tc.openModal();
+    if (!address) { tc.openModal(); return; }
     setBusy(true);
     try {
       if (mode === "deposit") {
@@ -61,7 +61,7 @@ function WalletPage() {
         await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [msg] });
         toast(t("pending"));
       } else {
-        if (demo) return toast(t("openInTelegram"));
+        if (demo) { toast(t("openInTelegram")); return; }
         const r = await requestWithdraw({ data: { initData, amount: n } });
         setData((d) => d && { ...d, me: { ...d.me, balance: r.balance }, withdrawals: [
           { id: crypto.randomUUID(), amount: n, status: "pending", created_at: new Date().toISOString(), to_address: address } as any,
@@ -73,8 +73,8 @@ function WalletPage() {
   }
 
   async function subscribe() {
-    if (demo) return toast(t("openInTelegram"));
-    if (!address) return tc.openModal();
+    if (demo) { toast(t("openInTelegram")); return; }
+    if (!address) { tc.openModal(); return; }
     try {
       await tc.sendTransaction({
         validUntil: Math.floor(Date.now() / 1000) + 600,

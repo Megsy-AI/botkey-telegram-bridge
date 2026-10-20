@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pickLang } from "@/lib/i18n";
 
-const START: Record<string, { text: string; btn: string }> = {
+const START: Record<string, { text: string; btn: string }> & { en: { text: string; btn: string } } = {
   en: { text: "<b>Welcome to ORAI</b>\n\n<b>Mine ORAI every 6 hours, complete tasks and grow your mining power.</b>", btn: "Open app" },
   ar: { text: "<b>أهلاً بك في ORAI</b>\n\n<b>عدّن ORAI كل 6 ساعات، أكمل المهام وزوّد قوة التعدين.</b>", btn: "افتح التطبيق" },
   ru: { text: "<b>Добро пожаловать в ORAI</b>\n\n<b>Майни ORAI каждые 6 часов, выполняй задания и увеличивай мощность.</b>", btn: "Открыть" },
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const token = process.env.TELEGRAM_BOT_TOKEN;
+        const token = process.env['TELEGRAM_BOT_TOKEN'];
         if (!token) return new Response("Not configured", { status: 500 });
         const expected = await sha256b64url(`telegram-webhook:${token}`);
         if (request.headers.get("X-Telegram-Bot-Api-Secret-Token") !== expected) {
@@ -31,9 +31,9 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
         if (!msg?.text?.startsWith("/start")) return Response.json({ ok: true });
 
         const lang = pickLang(msg.from?.language_code);
-        const s = START[lang] ?? START.en;
+        const s = START[lang as string] ?? START.en;
         const param = msg.text.split(" ")[1];
-        const url = process.env.APP_URL || new URL(request.url).origin;
+        const url = process.env['APP_URL'] || new URL(request.url).origin;
         if (param?.startsWith("ref_") && msg.from?.id) {
           const ref = Number(param.slice(4));
           const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");

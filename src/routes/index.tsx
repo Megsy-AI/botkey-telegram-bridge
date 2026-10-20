@@ -33,7 +33,7 @@ function Home() {
   const me = data!.me;
   const now = useNow();
   const [busy, setBusy] = useState(false);
-  const level = POWER_LEVELS[me.power_level];
+  const level = POWER_LEVELS[me.power_level] ?? POWER_LEVELS[0]!;
   const started = me.mining_started_at ? new Date(me.mining_started_at).getTime() : null;
   const total = MINING_HOURS * 3600_000;
   const elapsed = started ? Math.min(now - started, total) : 0;
@@ -45,7 +45,7 @@ function Home() {
   const ss = String(Math.floor((left % 60_000) / 1000)).padStart(2, "0");
 
   async function act() {
-    if (demo) return toast(t("openInTelegram"));
+    if (demo) { toast(t("openInTelegram")); return; }
     setBusy(true);
     try {
       if (done) {
