@@ -143,6 +143,23 @@ export const verifyHoldings = createServerFn({ method: "POST" })
     return { holdings, power_level: lvl };
   });
 
+/** Polls the receive wallet for an on-chain payment carrying a specific comment. */
+async function findPayment(tag: string, minValue: number, attempts = 8) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const r = await fetch(`https://toncenter.com/api/v3/transactions?account=${RECEIVE_WALLET}&limit=100&sort=desc`);
+      if (r.ok) {
+        const j = (await r.json()) as any;
+        const tx = (j.transactions ?? []).find((t: any) =>
+          t.in_msg?.message_content?.decoded?.comment === tag && Number(t.in_msg?.value ?? 0) >= minValue);
+        if (tx) return tx;
+      }
+    } catch { /* retry */ }
+    await new Promise((res) => setTimeout(res, 4000));
+  }
+  return null;
+}
+
 export const requestWithdraw = createServerFn({ method: "POST" })
   .inputValidator((i: Auth & { amount: number }) => ({ ...auth(i), amount: Number(i.amount) }))
   .handler(async ({ data }) => {
@@ -151,10 +168,18 @@ export const requestWithdraw = createServerFn({ method: "POST" })
     const me = await loadUser(db, user.id);
     if (!me.wallet_address) throw new Error("Connect your wallet first");
     if (Number(me.balance) < data.amount) throw new Error("Not enough ORAI");
+    const tx = await findPayment(`fee:${user.id}`, WITHDRAW_FEE_GRAM * 1e9);
+    if (!tx) throw new Error("Fee payment not found yet, try again in a minute");
+    const { data: used } = await db.from("withdrawals").select("id").eq("fee_tx", tx.hash).maybeSingle();
+    if (used) throw new Error("This fee payment was already used");
     const balance = Number(me.balance) - data.amount;
     await db.from("tg_users").update({ balance }).eq("id", user.id);
-    await db.from("withdrawals").insert({ user_id: user.id, amount: data.amount, to_address: me.wallet_address });
-    return { balance };
+    const { sendOrai } = await import("./payout.server");
+    await sendOrai(me.wallet_address, data.amount);
+    await db.from("withdrawals").insert({
+      user_id: user.id, amount: data.amount, to_address: me.wallet_address, status: "sent", fee_tx: tx.hash,
+    });
+    return { balance, status: "sent" };
   });
 
 export const getMarket = createServerFn({ method: "GET" }).handler(async () => {
