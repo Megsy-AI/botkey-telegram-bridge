@@ -16,7 +16,7 @@ export const POWER_LEVELS = [0.1, 0.5, 1, 5, 10, 50, 100, 500, 1000, 5000, 10000
 );
 
 export function sessionReward(level: number) {
-  const l = POWER_LEVELS[Math.min(level, POWER_LEVELS.length - 1)];
+  const l = POWER_LEVELS[Math.min(level, POWER_LEVELS.length - 1)] ?? POWER_LEVELS[0]!;
   return (l.perDay * MINING_HOURS) / 24;
 }
 

@@ -110,8 +110,8 @@ const uk: Dict = { ...ru,
 export const dictionaries: Record<string, Dict> = { en, ar, ru, es, fr, tr, fa, id, pt, de, zh, hi, uk };
 export const RTL = new Set(["ar", "fa", "he", "ur"]);
 
-export function pickLang(code?: string | null) {
-  const c = (code || "en").toLowerCase().split("-")[0];
+export function pickLang(code?: string | null): string {
+  const c = (code || "en").toLowerCase().split("-")[0] ?? "en";
   return dictionaries[c] ? c : "en";
 }
 export function translator(lang: string) {
