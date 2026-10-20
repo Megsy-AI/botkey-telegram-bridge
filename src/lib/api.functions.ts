@@ -78,7 +78,8 @@ export const claimMining = createServerFn({ method: "POST" })
     if (!me.mining_started_at) throw new Error("Not mining");
     const ends = new Date(me.mining_started_at).getTime() + MINING_HOURS * 3600_000;
     if (Date.now() < ends) throw new Error("Mining not finished");
-    const balance = Number(me.balance) + sessionReward(me.power_level);
+    const pro = me.subscribed_until && new Date(me.subscribed_until).getTime() > Date.now();
+    const balance = Number(me.balance) + sessionReward(me.power_level) * (pro ? 2 : 1);
     await db.from("tg_users").update({ balance, mining_started_at: null }).eq("id", user.id);
     return { balance };
   });
@@ -178,4 +179,29 @@ export const walletBalances = createServerFn({ method: "POST" })
         .then((r) => r.json() as Promise<any>).then((j) => Number(j.balance ?? 0) / 1e9).catch(() => 0),
     ]);
     return { orai, gram };
+  });
+
+export const SUB_PRICE_GRAM = 5;
+
+/** Confirms a Pro payment on-chain (comment pro:<userId> to the receive wallet) and extends Pro by 30 days. */
+export const verifySubscription = createServerFn({ method: "POST" })
+  .inputValidator(auth)
+  .handler(async ({ data }) => {
+    const { RECEIVE_WALLET } = await import("./config");
+    const { user, db } = await ctx(data.initData);
+    const r = await fetch(`https://toncenter.com/api/v3/transactions?account=${RECEIVE_WALLET}&limit=100&sort=desc`);
+    if (!r.ok) throw new Error(`Blockchain lookup failed [${r.status}]`);
+    const j = (await r.json()) as any;
+    const tag = `pro:${user.id}`;
+    const tx = (j.transactions ?? []).find((t: any) =>
+      t.in_msg?.message_content?.decoded?.comment === tag && Number(t.in_msg?.value ?? 0) >= SUB_PRICE_GRAM * 1e9);
+    if (!tx) throw new Error("Payment not found yet, try again in a minute");
+    const me = await loadUser(db, user.id);
+    const txTime = Number(tx.now) * 1000;
+    const base = Math.max(Date.now(), me.subscribed_until ? new Date(me.subscribed_until).getTime() : 0);
+    // only credit a payment made after the current period was purchased
+    if (me.subscribed_until && txTime < new Date(me.subscribed_until).getTime() - 30 * 86400_000) throw new Error("Payment already used");
+    const until = new Date(base + 30 * 86400_000).toISOString();
+    await db.from("tg_users").update({ subscribed_until: until }).eq("id", user.id);
+    return { subscribed_until: until };
   });
