@@ -8,3 +8,10 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Project rules
+- App runs as a Telegram Mini App: every server function receives Telegram initData and verifies it server-side (src/lib/tg-auth.server.ts); no Supabase auth. Why: identity comes from Telegram.
+- All tables are service-role only (RLS on, no policies); access goes through server functions. Why: no browser sessions.
+- App shell (TON Connect, store) is client-only via ClientOnly + lazy import, and routes set ssr:false. Why: TON Connect and Telegram SDK need window.
+- @ton/core needs src/lib/buffer-polyfill imported before it. Why: Buffer missing in browsers.
+- Business constants (wallets, levels, mining hours) live in src/lib/config.ts.
