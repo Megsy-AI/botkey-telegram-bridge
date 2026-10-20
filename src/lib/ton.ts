@@ -1,3 +1,4 @@
+import "./buffer-polyfill";
 import { Address, beginCell, toNano } from "@ton/core";
 import { ORAI_JETTON } from "./config";
 
