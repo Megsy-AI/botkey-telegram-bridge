@@ -14,7 +14,140 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      task_completions: {
+        Row: {
+          created_at: string
+          task_id: string
+          user_id: number
+        }
+        Insert: {
+          created_at?: string
+          task_id: string
+          user_id: number
+        }
+        Update: {
+          created_at?: string
+          task_id?: string
+          user_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_completions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          image_url: string | null
+          link: string
+          reward: number
+          sort: number
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link: string
+          reward?: number
+          sort?: number
+          title: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link?: string
+          reward?: number
+          sort?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      tg_users: {
+        Row: {
+          balance: number
+          created_at: string
+          first_name: string | null
+          id: number
+          language_code: string | null
+          mining_started_at: string | null
+          photo_url: string | null
+          power_level: number
+          referred_by: number | null
+          subscribed_until: string | null
+          username: string | null
+          wallet_address: string | null
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          first_name?: string | null
+          id: number
+          language_code?: string | null
+          mining_started_at?: string | null
+          photo_url?: string | null
+          power_level?: number
+          referred_by?: number | null
+          subscribed_until?: string | null
+          username?: string | null
+          wallet_address?: string | null
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          first_name?: string | null
+          id?: number
+          language_code?: string | null
+          mining_started_at?: string | null
+          photo_url?: string | null
+          power_level?: number
+          referred_by?: number | null
+          subscribed_until?: string | null
+          username?: string | null
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
+      withdrawals: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          status: string
+          to_address: string
+          tx_hash: string | null
+          user_id: number
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          status?: string
+          to_address: string
+          tx_hash?: string | null
+          user_id: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          status?: string
+          to_address?: string
+          tx_hash?: string | null
+          user_id?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
