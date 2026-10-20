@@ -21,14 +21,14 @@ export const Route = createFileRoute("/tasks")({
   component: Tasks,
 });
 
-const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME as string | undefined;
+const BOT_USERNAME = "GamaCoinBot";
 
 function Tasks() {
   const { data, t, initData, demo, setData } = useStore();
   const [tab, setTab] = useState<"tasks" | "refs">("tasks");
   const [opened, setOpened] = useState<Record<string, boolean>>({});
   const me = data!.me;
-  const link = `https://t.me/${BOT_USERNAME ?? "bot"}?startapp=ref_${me.id}`;
+  const link = `https://t.me/${BOT_USERNAME}?start=ref_${me.id}`;
 
   async function onTask(task: any) {
     if (!opened[task.id]) {
