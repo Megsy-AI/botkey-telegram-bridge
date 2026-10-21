@@ -9,7 +9,7 @@ const sameAddr = (a?: string | null, b?: string | null) => { if (!a || !b) retur
 import { useStore } from "@/lib/store";
 import { getMarket, walletBalances, setWallet, requestWithdraw, checkWithdrawal, walletChallenge, proveWallet } from "@/lib/api.functions";
 import { MIN_WITHDRAW, RECEIVE_WALLET, WITHDRAW_FEE_GRAM } from "@/lib/config";
-import { commentPayload, fmt, oraiTransferMessage, short } from "@/lib/ton";
+import { commentPayload, fmt, oraiTransferMessage } from "@/lib/ton";
 import { CoinIcon, GhostButton, GRAM_ICON, ORAI_ICON, PrimaryButton } from "@/components/ui-kit";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 export const Route = createFileRoute("/wallet")({ ssr: false, head: () => ({ meta: [
@@ -66,12 +66,11 @@ function WalletPage() {
  const assets = [{ s: "ORAI", name: market?.orai.name || "Orange AI", icon: ORAI_ICON, price: market?.orai.priceUsd, balance: chain?.orai }, { s: "GRAM", name: "Gram", icon: GRAM_ICON, price: market?.gram.priceUsd, balance: chain?.gram }];
  return <div className="space-y-5">
      <div className="relative overflow-hidden rounded-3xl bg-primary text-primary-foreground">
-     <img src={banner} alt="" width={1536} height={768} className="absolute inset-0 h-full w-full object-cover object-right" />
+     <img src={banner} alt="" width={1376} height={768} className="absolute inset-0 h-full w-full object-cover object-right" />
      <div className="relative flex min-h-44 flex-col justify-center p-5" dir="ltr">
        <div className="text-xs font-bold opacity-90">{t("balance")}</div>
        <div className="mt-2 flex items-center gap-2"><CoinIcon src={ORAI_ICON} className="size-7 ring-2 ring-primary-foreground/40" /><span className="text-3xl font-bold tabular-nums">{fmt(Number(me.balance), 2)}</span></div>
        <div className="mt-1 text-sm font-bold opacity-90">ORAI{usd !== null ? ` · $${fmt(usd, 2)}` : ""}</div>
-       {linked && <div className="mt-3 w-fit rounded-full bg-primary-foreground/25 px-3 py-1 text-xs font-bold">{short(address)}</div>}
      </div>
    </div>
    {!linked ? <PrimaryButton onClick={connect}>{t("connectWallet")}</PrimaryButton> : <div className="grid grid-cols-2 gap-3"><PrimaryButton className="h-12" onClick={() => { setCoin("ORAI"); setMode("withdraw"); }}>{t("withdraw")}</PrimaryButton><GhostButton className="h-12 font-bold" onClick={() => setMode("deposit")}>{t("deposit")}</GhostButton></div>}

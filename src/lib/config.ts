@@ -5,7 +5,7 @@ export const PAYOUT_WALLET = "UQA5k2qscmlDz0tYaNMlmhCW5czvc6zMJpB78T4y4GDz9Q5a";
 export const CHANNEL_ID = "-1002616088306";
 export const SWAP_URL = `https://app.ston.fi/swap?chartVisible=false&ft=TON&tt=${ORAI_JETTON}`;
 export const MINING_HOURS = 2;
-export const DAILY_YIELD = 0.2;
+export const DAILY_YIELD = 0.5;
 export const BASE_ORAI_PER_DAY = 0.1;
 export const REFERRAL_BONUS = 25;
 export const REFERRAL_COMMISSION = 0.10;
