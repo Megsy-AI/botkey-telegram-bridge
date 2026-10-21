@@ -1,19 +1,18 @@
 import { useEffect } from "react";
 import { Link, Outlet, useLocation, useRouter } from "@tanstack/react-router";
 import { TonConnectUIProvider } from "@tonconnect/ui-react";
-import { Home, ListChecks, Zap, Wallet, UserRound } from "lucide-react";
+import { House, Gift, Gauge, Wallet, CircleUserRound } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { StoreProvider, useStore } from "@/lib/store";
 import { getWebApp } from "@/lib/telegram";
-import { DailyNotification } from "./DailyNotification";
 import logo from "@/assets/orai-logo.png.asset.json";
 
 const tabs = [
-  { to: "/", icon: Home, key: "home" },
-  { to: "/tasks", icon: ListChecks, key: "tasks" },
-  { to: "/power", icon: Zap, key: "power" },
+  { to: "/", icon: House, key: "home" },
+  { to: "/tasks", icon: Gift, key: "tasks" },
+  { to: "/power", icon: Gauge, key: "power" },
   { to: "/wallet", icon: Wallet, key: "wallet" },
-  { to: "/profile", icon: UserRound, key: "profile" },
+  { to: "/profile", icon: CircleUserRound, key: "profile" },
 ] as const;
 
 function BackButtonSync() {
@@ -48,7 +47,6 @@ function Frame() {
       {demo && (
         <div className="glass mb-3 rounded-2xl px-4 py-2 text-center text-xs text-muted-foreground">{t("openInTelegram")}</div>
       )}
-      <div className="mb-1 flex justify-end"><DailyNotification /></div>
       <Outlet />
       <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md px-4">
         <div className="glass-strong flex items-center justify-between rounded-2xl px-2 py-2">
