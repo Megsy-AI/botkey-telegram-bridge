@@ -218,7 +218,7 @@ async function syncPower(db: any, id: number) {
     }
   }
   catch { return { ...me, market, holdings: null, syncUnavailable: true }; }
-  if (!market.orai.priceUsd) return { ...me, market, holdings: Number(me.balance) + external, syncUnavailable: true };
+  if (!market.orai.priceUsd || market.stale) return { ...me, market, holdings: Number(me.balance) + external, syncUnavailable: true };
   // GRAM held in the verified wallet counts toward holdings at its USD value, expressed in ORAI.
   const gramAsOrai = market.gram?.priceUsd > 0 ? gramHeld * market.gram.priceUsd / market.orai.priceUsd : 0;
   const holdings = Number(me.balance) + external + gramAsOrai;
