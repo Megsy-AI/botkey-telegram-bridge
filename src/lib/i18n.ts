@@ -1,3 +1,5 @@
+import full from "./i18n-full.json";
+const FULL = full as Record<string, Record<string, string>>;
 const keys = [
   "home", "tasks", "power", "wallet", "swap",
   "level", "balance", "startMining", "mining", "claim", "remaining",
@@ -130,7 +132,8 @@ export function pickLang(code?: string | null): string {
 }
 export function translator(lang: string) {
   const d = dictionaries[lang] ?? en;
-  return (k: TKey) => d[k] ?? en[k];
+  const f = FULL[lang];
+  return (k: TKey) => f?.[k] ?? d[k] ?? en[k];
 }
 
 const extraEn = {
@@ -143,5 +146,4 @@ export type ExtraKey = keyof typeof extraEn;
 const notices: Record<string, string> = {
  ru: "Ваш ORAI ждёт. Заберите награды за майнинг и проверьте задания на сегодня.", es: "Tu ORAI te espera. Reclama tus recompensas y revisa las tareas de hoy.", fr: "Vos ORAI vous attendent. Récupérez vos récompenses et consultez les tâches du jour.", tr: "ORAI sizi bekliyor. Madencilik ödüllerinizi alın ve bugünün görevlerine bakın.", fa: "ORAI شما منتظر است. پاداش استخراج را دریافت کنید و وظایف امروز را ببینید.", id: "ORAI Anda menunggu. Klaim hadiah penambangan dan lihat tugas hari ini.", pt: "Seu ORAI está esperando. Resgate as recompensas e veja as tarefas de hoje.", de: "Deine ORAI warten. Hole deine Mining-Belohnungen ab und sieh dir die heutigen Aufgaben an.", zh: "您的 ORAI 正在等待。领取挖矿奖励并查看今日任务。", hi: "आपका ORAI इंतज़ार कर रहा है। माइनिंग पुरस्कार लें और आज के कार्य देखें।", uk: "Ваш ORAI чекає. Отримайте нагороди за майнінг і перегляньте завдання на сьогодні."
 };
-export function extraTranslator(lang: string) { return (key: ExtraKey) => key === "dailyNotice" && notices[lang] ? notices[lang] : (lang === "ar" ? extraAr : extraEn)[key]; }
-export const extraEnExport = extraEn;
+export function extraTranslator(lang: string) { const f = FULL[lang]; return (key: ExtraKey) => (lang === "ar" ? extraAr[key] : f?.[key]) ?? (key === "dailyNotice" ? notices[lang] : undefined) ?? extraEn[key]; }
