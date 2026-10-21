@@ -1,8 +1,1 @@
-{
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "https://botkey-telegram-bridge.lovable.app/$1"
-    }
-  ]
-}
+{"rewrites": [{"source": "/__l5e/:path*", "destination": "https://botkey-telegram-bridge.lovable.app/__l5e/:path*"}, {"source": "/_serverFn/:path*", "destination": "https://botkey-telegram-bridge.lovable.app/_serverFn/:path*"}, {"source": "/api/:path*", "destination": "https://botkey-telegram-bridge.lovable.app/api/:path*"}, {"source": "/:path*", "destination": "/index.html"}]}
