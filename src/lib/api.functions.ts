@@ -134,14 +134,14 @@ export const verifyHoldings = createServerFn({ method: "POST" })
   });
 
 /** Polls the receive wallet for an on-chain payment carrying a specific comment. */
-async function findPayment(tag: string, minValue: number, attempts = 8) {
+async function findPayment(tag: string, minValue: number, attempts = 8, used = new Set<unknown>()) {
   for (let i = 0; i < attempts; i++) {
     try {
       const r = await fetch(`https://toncenter.com/api/v3/transactions?account=${RECEIVE_WALLET}&limit=100&sort=desc`);
       if (r.ok) {
         const j = (await r.json()) as any;
         const tx = (j.transactions ?? []).find((t: any) =>
-          t.in_msg?.message_content?.decoded?.comment === tag && Number(t.in_msg?.value ?? 0) >= minValue);
+          !used.has(t.hash) && !t.description?.aborted && t.in_msg?.message_content?.decoded?.comment === tag && Number(t.in_msg?.value ?? 0) >= minValue);
         if (tx) return tx;
       }
     } catch { /* retry */ }
@@ -154,49 +154,39 @@ export const requestWithdraw = createServerFn({ method: "POST" })
   .inputValidator((i: Auth & { amount: number }) => ({ ...auth(i), amount: Number(i.amount) }))
   .handler(async ({ data }) => {
     const { user, db } = await ctx(data.initData);
-    if (!(data.amount >= MIN_WITHDRAW)) throw new Error(`Minimum is ${MIN_WITHDRAW} ORAI`);
+    if (!Number.isFinite(data.amount) || data.amount < MIN_WITHDRAW || data.amount > 1e12) throw new Error(`Minimum is ${MIN_WITHDRAW} ORAI`);
     const me = await loadUser(db, user.id);
     if (!me.wallet_address) throw new Error("Connect your wallet first");
     if (Number(me.balance) < data.amount) throw new Error("Not enough ORAI");
-    const tx = await findPayment(`fee:${user.id}`, WITHDRAW_FEE_GRAM * 1e9);
-    if (!tx) throw new Error("Fee payment not found yet, try again in a minute");
-    const { data: used } = await db.from("withdrawals").select("id").eq("fee_tx", tx.hash).maybeSingle();
-    if (used) throw new Error("This fee payment was already used");
-    const balance = Number(me.balance) - data.amount;
-    await db.from("tg_users").update({ balance }).eq("id", user.id);
-    const { sendOrai } = await import("./payout.server");
-    await sendOrai(me.wallet_address, data.amount);
-    await db.from("withdrawals").insert({
-      user_id: user.id, amount: data.amount, to_address: me.wallet_address, status: "sent", fee_tx: tx.hash,
-    });
-    return { balance, status: "sent" };
+    const { data: pending } = await db.from("withdrawals").select("id").eq("user_id", user.id).in("status", ["pending", "submitted"]).limit(1);
+    if (pending?.length) throw new Error("Your earlier withdrawal is still being confirmed");
+    const { sendOrai, payoutPreflight } = await import("./payout.server");
+    await payoutPreflight(data.amount);
+    const { data: previous } = await db.from("withdrawals").select("fee_tx").eq("user_id", user.id);
+    const used = new Set((previous ?? []).map((row: any) => row.fee_tx));
+    const tx = await findPayment(`fee:${user.id}`, WITHDRAW_FEE_GRAM * 1e9, 8, used);
+    if (!tx) throw new Error("Fee payment not found yet. Wait a minute before retrying; do not pay twice.");
+    const { data: withdrawalId, error } = await db.rpc("orange_reserve_withdrawal", { p_user_id: user.id, p_amount: data.amount, p_fee: tx.hash, p_address: me.wallet_address });
+    if (error) throw new Error(error.message);
+    const queryId = Date.now();
+    await db.from("withdrawals").update({ tx_hash: String(queryId) }).eq("id", withdrawalId);
+    try {
+      await sendOrai(me.wallet_address, data.amount, queryId);
+      await db.from("withdrawals").update({ status: "submitted" }).eq("id", withdrawalId);
+    } catch (error) {
+      // A timeout may happen after broadcasting. Keep the reserved amount for reconciliation,
+      // rather than refunding a transfer that might still land and paying twice.
+      console.error("Withdrawal broadcast requires reconciliation", error);
+    }
+    await syncPower(db, user.id);
+    return { balance: (await loadUser(db, user.id)).balance, status: "submitted" };
+
   });
 
-async function marketSnapshot(db: any, force = false) {
-  const { data: cached } = await db.from("market_snapshots").select("*").eq("id", "orai").maybeSingle();
-  if (!force && cached && Date.now() - new Date(cached.updated_at).getTime() < MARKET_MAX_AGE) return cached.data;
-  const get = async (addr: string) => {
-    const response = await fetch(`https://api.ston.fi/v1/assets/${addr}`);
-    if (!response.ok) throw new Error(`STON price unavailable [${response.status}]`);
-    const json = await response.json() as any;
-    const asset = json.asset ?? {};
-    return { symbol: asset.symbol ?? "", name: asset.display_name ?? "", image: asset.image_url ?? "", priceUsd: Number(asset.dex_price_usd || asset.third_party_price_usd || 0) };
-  };
-  try {
-    const [orai, gram] = await Promise.all([get(ORAI_JETTON), get(GRAM_ADDRESS)]);
-    if (!Number.isFinite(orai.priceUsd) || orai.priceUsd <= 0) throw new Error("ORAI price unavailable");
-    const result = { orai: { ...orai, symbol: "ORAI", name: orai.name || "Orange AI" }, gram: { ...gram, symbol: "GRAM", name: "Gram" }, updatedAt: new Date().toISOString(), stale: false };
-    const { error } = await db.from("market_snapshots").upsert({ id: "orai", data: result, updated_at: result.updatedAt });
-    if (error) throw new Error(error.message);
-    return result;
-  } catch (error) {
-    console.error("Market refresh failed", error);
-    if (cached) return { ...cached.data, stale: true };
-    return { orai: { symbol: "ORAI", name: "Orange AI", image: "", priceUsd: 0 }, gram: { symbol: "GRAM", name: "Gram", image: "", priceUsd: 0 }, updatedAt: null, stale: true };
-  }
-}
+
 async function syncPower(db: any, id: number) {
   const me = await loadUser(db, id);
+  const { marketSnapshot } = await import("./market.server");
   const market = await marketSnapshot(db);
   let external = 0;
   try { if (me.wallet_verified && me.wallet_address) external = await oraiHoldings(me.wallet_address); }
@@ -212,10 +202,12 @@ async function syncPower(db: any, id: number) {
 }
 export const getMarket = createServerFn({ method: "POST" }).inputValidator(auth).handler(async ({ data }) => {
   const { db } = await ctx(data.initData);
+  const { marketSnapshot } = await import("./market.server");
   return marketSnapshot(db);
 });
 export const refreshMarket = createServerFn({ method: "POST" }).inputValidator(auth).handler(async ({ data }) => {
   const { db } = await adminCtx(data.initData);
+  const { marketSnapshot } = await import("./market.server");
   return marketSnapshot(db, true);
 });
 
