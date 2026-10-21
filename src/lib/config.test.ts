@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { POWER_LEVELS, MINING_HOURS, levelForHoldings, dailyOrai, miningAccrued, holdingsPower, isAdminUsername } from "./config";
+import { POWER_LEVELS, MINING_HOURS, levelForHoldings, dailyOrai, miningAccrued, holdingsPower, isAdminUsername, referralCommission } from "./config";
 describe("Orange holding and mining rules", () => {
+  it("referrers earn an additional 10% without deducting invitee rewards", () => { const reward = 100; expect(referralCommission(reward)).toBe(10); expect(reward).toBe(100); });
   it("caps accumulation at two hours", () => { expect(MINING_HOURS).toBe(2); expect(miningAccrued(0, 10 * 3600_000, 24)).toBe(2); });
   it("starts paid tiers at $0.10, $0.15 and $0.20", () => expect(POWER_LEVELS.slice(1, 4).map(t => t.price)).toEqual([0.1, 0.15, 0.2]));
   it("ends tiers at $10,000", () => expect(POWER_LEVELS.at(-1)?.price).toBe(10000));

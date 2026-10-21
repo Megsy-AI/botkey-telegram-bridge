@@ -8,6 +8,8 @@ export const MINING_HOURS = 2;
 export const DAILY_YIELD = 0.2;
 export const BASE_ORAI_PER_DAY = 0.1;
 export const REFERRAL_BONUS = 25;
+export const REFERRAL_COMMISSION = 0.10;
+export function referralCommission(reward: number) { return reward * REFERRAL_COMMISSION; }
 export const MIN_WITHDRAW = 100;
 export const DECIMALS = 9;
 export const WITHDRAW_FEE_GRAM = 0.15;

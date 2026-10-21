@@ -5,6 +5,7 @@ import { Home, ListChecks, Zap, Wallet, UserRound } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { StoreProvider, useStore } from "@/lib/store";
 import { getWebApp } from "@/lib/telegram";
+import { DailyNotification } from "./DailyNotification";
 import logo from "@/assets/orai-logo.png.asset.json";
 
 const tabs = [
@@ -47,6 +48,7 @@ function Frame() {
       {demo && (
         <div className="glass mb-3 rounded-2xl px-4 py-2 text-center text-xs text-muted-foreground">{t("openInTelegram")}</div>
       )}
+      <div className="mb-1 flex justify-end"><DailyNotification /></div>
       <Outlet />
       <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md px-4">
         <div className="glass-strong flex items-center justify-between rounded-2xl px-2 py-2">

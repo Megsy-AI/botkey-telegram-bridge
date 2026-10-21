@@ -12,6 +12,8 @@ export const Route = createFileRoute("/tasks")({
   ssr: false,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Orange — Tasks" },
       { name: "description", content: "Complete tasks and invite friends to earn ORAI." },
       { property: "og:title", content: "ORAI Tasks" },
