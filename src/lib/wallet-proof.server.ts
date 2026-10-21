@@ -1,8 +1,8 @@
 import { Address } from "@ton/core";
 import { signVerify } from "@ton/crypto";
 import { Buffer } from "node:buffer";
-export async function verifyWalletProof(address: string, proof: { timestamp: number; domain: { lengthBytes: number; value: string }; payload: string; signature: string }, nonce: string, host: string) {
-  if (proof.payload !== nonce || proof.domain.value !== host || Math.abs(Date.now() / 1000 - proof.timestamp) > 300) throw new Error("Wallet proof expired or invalid");
+export async function verifyWalletProof(address: string, proof: { timestamp: number; domain: { lengthBytes: number; value: string }; payload: string; signature: string }, nonce: string, hosts: string[]) {
+  if (proof.payload !== nonce || !hosts.includes(proof.domain.value) || Math.abs(Date.now() / 1000 - proof.timestamp) > 300) throw new Error("Wallet proof expired or invalid");
   const domain = Buffer.from(proof.domain.value);
   if (domain.length !== proof.domain.lengthBytes) throw new Error("Invalid wallet domain");
   const parsed = Address.parse(address);
