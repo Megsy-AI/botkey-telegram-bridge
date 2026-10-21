@@ -15,7 +15,7 @@ export default defineConfig({
         // swaps it for an empty browser-external stub and @ton/core crashes.
         name: "buffer-polyfill-resolve",
         enforce: "pre",
-        resolveId(source: string, _importer: string | undefined, options: { ssr?: boolean }) {
+        resolveId(source: string, _importer: string | undefined, options: { ssr?: boolean | undefined }) {
           // Client bundle only — the server (workerd) has a native buffer builtin.
           if (options?.ssr) return null;
           if (source === "buffer" || source === "node:buffer") {
