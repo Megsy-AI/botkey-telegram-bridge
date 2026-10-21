@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { bootstrap } from "./api.functions";
 import { initTelegram } from "./telegram";
-import { pickLang, translator, RTL, type TKey } from "./i18n";
+import { pickLang, translator, RTL, extraTranslator, type ExtraKey, type TKey } from "./i18n";
 
 type Data = Awaited<ReturnType<typeof bootstrap>>;
 
@@ -11,6 +11,7 @@ type Store = {
   data: Data | null;
   error: string | null;
   lang: string;
+  x: (k: ExtraKey) => string;
   t: (k: TKey) => string;
   refresh: () => Promise<void>;
   patchMe: (p: Partial<Data["me"]>) => void;
@@ -56,10 +57,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setDemo(true);
       setData(demoData(l));
     } else load(init);
+    const onFocus = () => { if (init) load(init); };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, [load]);
 
   const value = useMemo<Store>(() => ({
-    initData, demo, data, error, lang, t: translator(lang), setData,
+    initData, demo, data, error, lang, t: translator(lang), x: extraTranslator(lang), setData,
     refresh: () => (initData ? load(initData) : Promise.resolve()),
     patchMe: (p) => setData((d) => (d ? { ...d, me: { ...d.me, ...p } } : d)),
   }), [initData, demo, data, error, lang, load]);

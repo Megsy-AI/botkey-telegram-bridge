@@ -3,33 +3,39 @@ export const GRAM_ADDRESS = "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c";
 export const RECEIVE_WALLET = "UQAp1QxnLJ2z44IooUovvtVShw7hJBEdxCRV3RlbCYC3D8qj";
 export const PAYOUT_WALLET = "UQA5k2qscmlDz0tYaNMlmhCW5czvc6zMJpB78T4y4GDz9Q5a";
 export const CHANNEL_ID = "-1002616088306";
-export const SWAP_URL =
-  "https://app.ston.fi/swap?chartVisible=false&ft=GRAM&tt=EQCY5dx1kTGT-r1RPXA-LTRyv73_LtfcaTl0g1E_WBlRdUyI";
-export const MINING_HOURS = 6;
+export const SWAP_URL = `https://app.ston.fi/swap?chartVisible=false&ft=TON&tt=${ORAI_JETTON}`;
+export const MINING_HOURS = 2;
+export const DAILY_YIELD = 0.2;
+export const BASE_ORAI_PER_DAY = 0.1;
 export const REFERRAL_BONUS = 25;
 export const MIN_WITHDRAW = 100;
 export const DECIMALS = 9;
-/** Fee charged on every withdrawal, paid in GRAM to the receive wallet. */
 export const WITHDRAW_FEE_GRAM = 0.15;
-/** Telegram usernames (lowercase, no @) with access to the admin screen. */
-export const ADMIN_USERNAMES = ["eIgiza".toLowerCase()];
-/** NFT collection the owner creates; purchases mint an item straight to the buyer's wallet. */
+export const ADMIN_USERNAMES = ["eigiza"];
 export const NFT_COLLECTION_ADDRESS = "";
 export const NFT_PRICE_GRAM = 1;
-
-/** Mining power levels: ORAI earned per day, and ORAI cost to unlock. */
-export const POWER_LEVELS = [0.1, 0.5, 1, 5, 10, 50, 100, 500, 1000, 5000, 10000].map(
-  (perDay, level) => ({ level, perDay, price: level === 0 ? 0 : perDay * 30 }),
-);
-
-export function sessionReward(level: number) {
-  const l = POWER_LEVELS[Math.min(level, POWER_LEVELS.length - 1)] ?? POWER_LEVELS[0]!;
-  return (l.perDay * MINING_HOURS) / 24;
+export const SUPPORTER_URL = "https://megsyai.com";
+export const MARKET_MAX_AGE = 3600_000;
+const thresholds: number[] = [];
+for (const [start, end, step] of [[10, 100, 5], [125, 1000, 25], [1250, 10000, 250], [12500, 100000, 2500], [125000, 1000000, 25000]]) {
+  for (let cents = start; cents <= end; cents += step) thresholds.push(cents / 100);
 }
-
-/** Highest level whose price is covered by an on-chain ORAI holding. */
-export function levelForHoldings(holdings: number) {
-  let lvl = 0;
-  for (const l of POWER_LEVELS) if (l.price <= holdings) lvl = l.level;
-  return lvl;
+export const POWER_LEVELS = [{ level: 0, price: 0, perDay: 0 }, ...thresholds.map((price, index) => ({ level: index + 1, price, perDay: price * DAILY_YIELD }))];
+export function levelForHoldings(holdings: number, priceUsd = 1) {
+  const usd = Math.max(0, holdings) * Math.max(0, priceUsd);
+  let level = 0;
+  for (const tier of POWER_LEVELS) if (tier.price <= usd + 1e-10) level = tier.level;
+  return level;
 }
+export function dailyOrai(level: number, priceUsd: number) {
+  const tier = POWER_LEVELS[level];
+  return tier && tier.level > 0 && priceUsd > 0 ? tier.perDay / priceUsd : BASE_ORAI_PER_DAY;
+}
+export function sessionReward(level: number, priceUsd = 1) { return dailyOrai(level, priceUsd) * MINING_HOURS / 24; }
+export function miningAccrued(started: number, now: number, rateDaily: number) {
+  return Math.max(0, Math.min(now - started, MINING_HOURS * 3600_000)) / 86400_000 * rateDaily;
+}
+export function holdingsPower(appOrai: number, externalOrai: number, priceUsd: number) {
+  return { balance: appOrai, holdings: Math.max(0, appOrai) + Math.max(0, externalOrai), power_level: levelForHoldings(appOrai + externalOrai, priceUsd) };
+}
+export function isAdminUsername(username?: string) { return ADMIN_USERNAMES.includes((username ?? "").toLowerCase()); }

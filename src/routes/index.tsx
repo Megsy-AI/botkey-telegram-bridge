@@ -3,113 +3,46 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
 import { startMining, claimMining } from "@/lib/api.functions";
-import { MINING_HOURS, POWER_LEVELS, sessionReward } from "@/lib/config";
+import { MINING_HOURS, POWER_LEVELS } from "@/lib/config";
 import { fmt } from "@/lib/ton";
 import { haptic } from "@/lib/telegram";
-import { Card, CoinIcon, ORAI_ICON, PrimaryButton } from "@/components/ui-kit";
+import { CoinIcon, ORAI_ICON, PrimaryButton } from "@/components/ui-kit";
 import mascot from "@/assets/orai-mascot.jpg.asset.json";
-
-export const Route = createFileRoute("/")({
-  ssr: false,
-  head: () => ({
-    meta: [
-      { title: "Orange — Home" },
-      { name: "description", content: "Start a 6-hour ORAI mining session and watch your balance grow." },
-      { property: "og:title", content: "Orange" },
-      { property: "og:description", content: "Start a 6-hour ORAI mining session and watch your balance grow." },
-    ],
-  }),
-  component: Home,
-});
-
-function useNow() {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => { const i = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(i); }, []);
-  return now;
-}
-
+export const Route = createFileRoute("/")({ ssr: false, head: () => ({ meta: [
+  { title: "Orange — Mining" }, { name: "description", content: "Mine ORAI continuously and claim every two hours." },
+  { property: "og:title", content: "Orange Mining" }, { property: "og:description", content: "Mine ORAI continuously and claim every two hours." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }
+]}), component: Home });
 function Home() {
-  const { data, t, initData, demo, patchMe } = useStore();
-  const me = data!.me;
-  const now = useNow();
+  const { data, t, x, initData, demo, patchMe } = useStore();
+  const [now, setNow] = useState(Date.now());
   const [busy, setBusy] = useState(false);
-  const level = POWER_LEVELS[me.power_level] ?? POWER_LEVELS[0]!;
+  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer); }, []);
+  if (!data) return null;
+  const me = data.me;
   const started = me.mining_started_at ? new Date(me.mining_started_at).getTime() : null;
   const total = MINING_HOURS * 3600_000;
-  const elapsed = started ? Math.min(now - started, total) : 0;
+  const elapsed = started === null ? 0 : Math.max(0, Math.min(now - started, total));
   const done = started !== null && elapsed >= total;
-  const mined = started ? (sessionReward(me.power_level) * elapsed) / total : 0;
-  const left = total - elapsed;
-  const hh = String(Math.floor(left / 3600_000)).padStart(2, "0");
-  const mm = String(Math.floor((left % 3600_000) / 60_000)).padStart(2, "0");
-  const ss = String(Math.floor((left % 60_000) / 1000)).padStart(2, "0");
-
+  const settled = me.mining_settled_at ? new Date(me.mining_settled_at).getTime() : started;
+  const mined = started !== null && settled !== null ? Number(me.mining_pending ?? 0) + Math.max(0, Math.min(now, started + total) - settled) / 86400_000 * Number(me.mining_rate_daily ?? 0.1) : 0;
+  const left = Math.max(0, total - elapsed);
+  const clock = [Math.floor(left / 3600_000), Math.floor(left % 3600_000 / 60000), Math.floor(left % 60000 / 1000)].map(v => String(v).padStart(2, "0")).join(":");
   async function act() {
     if (demo) { toast(t("openInTelegram")); return; }
     setBusy(true);
-    try {
-      if (done) {
-        const r = await claimMining({ data: { initData } });
-        patchMe({ balance: r.balance, mining_started_at: null });
-        haptic("success");
-      } else if (!started) {
-        const r = await startMining({ data: { initData } });
-        patchMe({ mining_started_at: r.mining_started_at });
-        haptic("medium");
-      }
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally { setBusy(false); }
+    try { const result = done ? await claimMining({ data: { initData } }) : await startMining({ data: { initData } }); patchMe(result); haptic("success"); }
+    catch (error: any) { toast.error(error.message); } finally { setBusy(false); }
   }
-
-  return (
-    <div className="flex flex-1 flex-col items-center pt-4 text-center">
-      <div className="text-xl">{me.first_name || me.username}</div>
-      <div className="mt-1 rounded-full bg-accent px-3 py-1 text-xs text-accent-foreground">
-        {t("level")} {me.power_level} · {fmt(level.perDay)} ORAI {t("perDay")}
-      </div>
-
-      <div className="relative mt-8">
-        {started && !done && <span className="mining-ring absolute inset-0 rounded-full bg-primary/30" />}
-        <img src={me.photo_url || mascot.url} alt=""
-          className="relative size-40 rounded-full border-4 border-glass-edge object-cover shadow-xl" />
-      </div>
-
-      <div className="mt-8 text-sm text-muted-foreground">{t("balance")}</div>
-      <div className="mt-1 flex items-center gap-2 text-5xl tracking-tight">
-        <CoinIcon src={ORAI_ICON} className="size-9" />
-        {fmt(Number(me.balance) + mined, 4)}
-      </div>
-      <div className="text-sm text-muted-foreground">ORAI</div>
-
-      <div className="mt-6 grid w-full grid-cols-2 gap-2">
-        <Link to="/nft">
-          <Card className="flex h-full items-center justify-center gap-2 py-3 text-sm">
-            <CoinIcon src={ORAI_ICON} className="size-5" /> NFT
-          </Card>
-        </Link>
-        {data!.isAdmin && (
-          <Link to="/admin">
-            <Card className="flex h-full items-center justify-center py-3 text-sm">{t("admin")}</Card>
-          </Link>
-        )}
-      </div>
-
-      <div className="mt-auto w-full pt-10">
-        {started && !done ? (
-          <div className="glass w-full rounded-2xl p-4">
-            <div className="text-base">{t("mining")}</div>
-            <div className="mt-1 text-3xl tabular-nums">{hh}:{mm}:{ss}</div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-              <div className="btn-orange h-full rounded-full" style={{ width: `${(elapsed / total) * 100}%` }} />
-            </div>
-          </div>
-        ) : (
-          <PrimaryButton onClick={act} disabled={busy}>
-            {done ? `${t("claim")} +${fmt(sessionReward(me.power_level), 4)} ORAI` : t("startMining")}
-          </PrimaryButton>
-        )}
-      </div>
+  return <div className="flex flex-col items-center pt-4 text-center">
+    <div className="flex w-full items-center justify-between"><span className="text-xl">Orange</span><Link to="/profile" className="flex items-center gap-2 text-sm"><img src={me.photo_url || mascot.url} alt="" className="size-8 rounded-full object-cover" /><span className="max-w-36 truncate">{me.first_name || me.username}</span></Link></div>
+    <img src={mascot.url} alt="Orange" className="mt-8 size-32 rounded-full object-cover" />
+    <div className="mt-6 text-sm text-muted-foreground">{t("balance")}</div>
+    <div className="mt-2 flex max-w-full items-center justify-center gap-2 break-all text-4xl tabular-nums"><CoinIcon src={ORAI_ICON} className="size-8" />{fmt(Number(me.balance) + mined, 4)}</div>
+    <span className="mt-1 text-sm text-muted-foreground">ORAI</span>
+    <Link to="/power" className="mt-6 flex w-full items-center justify-between border-y border-input py-4 text-start"><div><div className="text-xs text-muted-foreground">{t("level")}</div><div className="mt-1 text-2xl">{me.power_level}</div></div><div className="text-end"><div className="text-xs text-muted-foreground">{x("dailyReward")}</div><div className="mt-1 text-lg text-primary">{me.power_level > 0 ? `$${fmt(POWER_LEVELS[me.power_level]?.perDay ?? 0, 2)}` : `${fmt(Number(me.mining_rate_daily ?? 0.1), 4)} ORAI`}</div></div></Link>
+    <div className="mt-6 w-full">
+      {started !== null && <><div className="flex justify-between text-sm"><span>{done ? x("capNotice") : t("mining")}</span><span className="tabular-nums">{done ? "02:00:00" : clock}</span></div><progress aria-label={t("mining")} max={100} value={elapsed / total * 100} className="mt-3 h-1.5 w-full accent-primary" /></>}
+      {started === null || done ? <PrimaryButton className="mt-4" onClick={act} disabled={busy}>{done ? `${t("claim")} +${fmt(mined, 4)} ORAI` : t("startMining")}</PrimaryButton> : <div className="mt-4 rounded-2xl bg-accent py-4 text-primary">+{fmt(mined, 4)} ORAI</div>}
     </div>
-  );
+  </div>;
 }
