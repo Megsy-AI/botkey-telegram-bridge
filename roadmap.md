@@ -19,3 +19,11 @@
 - [ ] Automatic deposit crediting: existing payments do not yet automatically credit app balance; needs verified chain ledger reconciliation.
 - [ ] White paper funding/supply/audit/legal content requires owner approval; current pages explicitly marked draft.
 - [ ] Daily channel AI posts intentionally paused by user request.
+
+## Completed (2026-10-21 UI overhaul)
+- Home: removed Orange text/username/level row; big user photo with circular mining progress ring.
+- Power: removed header/search/price texts; tiers $0.10–$10,000 clean list; buy dialog computes GRAM amount and copies it + opens STON.fi; NFT merged as a tab (/nft redirects).
+- Wallet: removed disconnect/verify buttons; wallet proof verification is automatic and silent (no more repeated failure toasts).
+- Tasks: completed tasks hidden; real membership verification via bot getChatMember for t.me channel/group links.
+- Profile: sections are now full separate pages (/guide /about /premium /supporter /whitepaper /roadmap) with expanded bilingual content; premium subscribe moved to /premium.
+- Nav: new icons (House, Gift, Gauge, Wallet, CircleUserRound); in-app notification bell removed (bot notifications only).
