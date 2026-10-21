@@ -46,3 +46,4 @@
 - [x] 10 tiers (0.5→300 GRAM) with mining/referral/task boosts, new characters, Getgems collection linked, new /start image
 - [ ] Automatic mint into buyer wallet — blocked: collection owner is the receive wallet; ownership must move to the payout wallet (purchases are recorded as pending mint until then)
 - [x] Remove wallet address from wallet banner
+- [x] Show withdraw/deposit once wallet connected
