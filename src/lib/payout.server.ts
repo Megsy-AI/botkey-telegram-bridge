@@ -57,7 +57,11 @@ export async function sendOrai(to: string, amount: number, queryId = Date.now())
   if (typeof seqno !== "number") throw new Error("Payout wallet is not active");
   const transfer = contract.createTransfer({ seqno, secretKey: key.secretKey, sendMode: SendMode.PAY_GAS_SEPARATELY, messages: [internal({ to: jettonWallet, value: toNano("0.05"), body })] });
   const boc = beginCell().store(storeMessage(external({ to: contract.address, body: transfer }))).endCell().toBoc().toString("base64");
-  const broadcast = await fetch("https://toncenter.com/api/v3/message", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ boc }) });
+  let broadcast = await fetch("https://toncenter.com/api/v3/message", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ boc }) });
+  for (let attempt = 0; broadcast.status === 429 && attempt < 3; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1)));
+    broadcast = await fetch("https://toncenter.com/api/v3/message", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ boc }) });
+  }
   if (!broadcast.ok) throw new Error(`Broadcast failed [${broadcast.status}]: ${await broadcast.text()}`);
   return { seqno, queryId };
 }
