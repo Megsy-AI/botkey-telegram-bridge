@@ -93,6 +93,19 @@ export const completeTask = createServerFn({ method: "POST" })
     const { user, db } = await ctx(data.initData);
     const { data: task } = await db.from("tasks").select("*").eq("id", data.taskId).single();
     if (!task) throw new Error("Task not found");
+    // Real verification: for plain t.me channel/group links, confirm membership via the bot.
+    const match = String(task.link).match(/(?:^|\/\/)t\.me\/([A-Za-z0-9_]{5,})/);
+    if (match && !String(task.link).includes("?")) {
+      const token = process.env["TELEGRAM_BOT_TOKEN"];
+      if (token) {
+        const r = await fetch(`https://api.telegram.org/bot${token}/getChatMember`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: `@${match[1]}`, user_id: user.id }),
+        });
+        const j = (await r.json()) as any;
+        if (!j.ok || ["left", "kicked", "restricted"].includes(j.result?.status)) throw new Error("TASK_NOT_VERIFIED");
+      }
+    }
     const { error } = await db.from("task_completions").insert({ user_id: user.id, task_id: task.id });
     if (error) throw new Error("Already completed");
     const me = await loadUser(db, user.id);
