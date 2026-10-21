@@ -6,64 +6,81 @@ import { toNano } from "@ton/core";
 import { useTonAddress, useTonConnectUI } from "@tonconnect/ui-react";
 import { useStore } from "@/lib/store";
 import { verifyHoldings, buyNft, myNfts } from "@/lib/api.functions";
-import { POWER_LEVELS, SWAP_URL, NFT_COLLECTION_ADDRESS, NFT_PRICE_GRAM, RECEIVE_WALLET } from "@/lib/config";
+import { POWER_LEVELS, SWAP_URL, NFT_TIERS, NFT_COLLECTION_URL, RECEIVE_WALLET } from "@/lib/config";
+import nft1 from "@/assets/nft/tier1.jpg";
+import nft2 from "@/assets/nft/tier2.jpg";
+import nft3 from "@/assets/nft/tier3.jpg";
+import nft4 from "@/assets/nft/tier4.jpg";
+import nft5 from "@/assets/nft/tier5.jpg";
+import nft6 from "@/assets/nft/tier6.jpg";
+import nft7 from "@/assets/nft/tier7.jpg";
+import nft8 from "@/assets/nft/tier8.jpg";
+import nft9 from "@/assets/nft/tier9.jpg";
+import nft10 from "@/assets/nft/tier10.jpg";
 import { openLink, haptic } from "@/lib/telegram";
 import { fmt, commentPayload } from "@/lib/ton";
-import { Card, CoinIcon, GhostButton, GRAM_ICON, ORAI_ICON, PrimaryButton } from "@/components/ui-kit";
+import { Card, CoinIcon, GhostButton, GRAM_ICON, PrimaryButton } from "@/components/ui-kit";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/power")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({ tab: s["tab"] === "nft" ? ("nft" as const) : ("power" as const) }),
   head: () => ({ meta: [
-    { title: "Orange — Holding power" }, { name: "description", content: "ORAI holding tiers from $0.10 to $10,000, with automatic mining power." }, { property: "og:title", content: "Orange Holding Power" }, { property: "og:description", content: "ORAI holding tiers from $0.10 to $10,000, with automatic mining power." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }
-  ]}),
-  component: Power,
-});
+    { title: "Orange — Holding powconst NFT_IMAGES = [nft1, nft2, nft3, nft4, nft5, nft6, nft7, nft8, nft9, nft10];
 
 function NftTab() {
-  const { data, t, initData, demo } = useStore();
+  const { data, t, initData, demo, lang } = useStore();
   const me = data!.me;
+  const ar = lang === "ar";
   const address = useTonAddress();
   const [tc] = useTonConnectUI();
   const [owned, setOwned] = useState<any[]>([]);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<number | null>(null);
   const load = () => { if (!demo) myNfts({ data: { initData } }).then((r) => setOwned(r.nfts)).catch(() => {}); };
   useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const available = !!NFT_COLLECTION_ADDRESS;
-  async function buy() {
+  const ownedTiers = owned.map((n) => n.tier);
+  async function buy(tier: (typeof NFT_TIERS)[number]) {
     if (demo) { toast(t("openInTelegram")); return; }
     if (!address) { tc.openModal(); return; }
-    setBusy(true);
+    setBusy(tier.tier);
     try {
       await tc.sendTransaction({
         validUntil: Math.floor(Date.now() / 1000) + 600,
-        messages: [{ address: RECEIVE_WALLET, amount: toNano(NFT_PRICE_GRAM.toString()).toString(), payload: commentPayload(`nft:${me.id}`) }],
+        messages: [{ address: RECEIVE_WALLET, amount: toNano(tier.price.toString()).toString(), payload: commentPayload(`nft:${me.id}:${tier.tier}`) }],
       });
       toast(t("pending"));
       await new Promise((r) => setTimeout(r, 12000));
-      await buyNft({ data: { initData } });
+      await buyNft({ data: { initData, tier: tier.tier } });
       haptic("success");
       toast.success(t("done"));
       load();
-    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
+    } catch (e: any) { toast.error(e.message); } finally { setBusy(null); }
   }
   return (
     <div className="space-y-3">
-      <Card className="text-center">
-        <div className="mx-auto mb-3 flex size-24 items-center justify-center rounded-3xl bg-accent">
-          <CoinIcon src={ORAI_ICON} className="size-16" />
-        </div>
-        {available ? (
-          <>
-            <div className="text-lg">ORAI NFT</div>
-            <div className="mt-1 text-sm text-muted-foreground">{t("price")}: {NFT_PRICE_GRAM} GRAM</div>
-            <PrimaryButton className="mt-4" onClick={buy} disabled={busy}>{t("buyNft")}</PrimaryButton>
-          </>
-        ) : (
-          <div className="text-muted-foreground">{t("nftSoon")}</div>
-        )}
-      </Card>
+      <div className="grid grid-cols-2 gap-3">
+        {NFT_TIERS.map((n) => (
+          <Card key={n.tier} className={`overflow-hidden p-0 ${ownedTiers.includes(n.tier) ? "ring-2 ring-primary" : ""}`}>
+            <img src={NFT_IMAGES[n.tier - 1]} alt={n.name} loading="lazy" className="aspect-square w-full object-cover" />
+            <div className="space-y-1 p-3">
+              <div className="text-sm font-bold leading-tight">{n.name}</div>
+              <div className="text-xs text-muted-foreground">{ar ? "تعدين" : "Mining"} +{Math.round(n.mining * 100)}%</div>
+              <div className="text-xs text-muted-foreground">{ar ? "إحالة" : "Referral"} +{Math.round(n.referral * 100)}%</div>
+              <div className="text-xs text-muted-foreground">{ar ? "مهام" : "Tasks"} ×{n.tasks}</div>
+              <PrimaryButton className="mt-2 h-10 w-full text-sm" onClick={() => buy(n)} disabled={busy !== null}>
+                {busy === n.tier ? "…" : <span className="flex items-center justify-center gap-1"><CoinIcon src={GRAM_ICON} className="size-4" />{n.price} GRAM</span>}
+              </PrimaryButton>
+            </div>
+          </Card>
+        ))}
+      </div>
+      <GhostButton className="w-full" onClick={() => openLink(NFT_COLLECTION_URL)}>Getgems</GhostButton>
+      <p className="text-xs text-muted-foreground">{ar ? "المزايا حسب أعلى فئة تملكها، وليست ضمانًا لأرباح." : "Perks follow your highest owned tier and are not a guaranteed return."}</p>
+    </div>
+  );
+}
+
+
       {owned.length > 0 && (
         <Card>
           {owned.map((n) => (
