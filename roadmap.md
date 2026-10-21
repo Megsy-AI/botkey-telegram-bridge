@@ -48,3 +48,8 @@
 - [x] Remove wallet address from wallet banner
 - [x] Show withdraw/deposit once wallet connected
 - [x] Redesign power level cards
+- [ ] Remove "Start" task; STON buy task with real on-chain check
+- [ ] Add channel as task
+- [ ] Auto-translate admin-added tasks
+- [ ] Redesign profile page
+- [ ] Complete translations for all languages

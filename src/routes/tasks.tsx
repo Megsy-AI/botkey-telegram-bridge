@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
 import { completeTask } from "@/lib/api.functions";
@@ -31,27 +31,38 @@ function Tasks() {
   const { data, t, x, initData, demo, setData, lang } = useStore();
   const [tab, setTab] = useState<"tasks" | "refs">("tasks");
   const [opened, setOpened] = useState<Record<string, boolean>>({});
+  const waiting = useRef<any>(null);
+  useEffect(() => {
+    const onFocus = () => { const task = waiting.current; if (task) { waiting.current = null; void claim(task, true); } };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => { window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onFocus); };
+  });
   if (!data) return null;
   const me = data.me;
   const link = `https://t.me/${BOT_USERNAME}?start=ref_${me.id}`;
   const pending = data.tasks.filter((task: any) => !data.done.includes(task.id));
 
-  async function onTask(task: any) {
-    if (!opened[task.id]) {
-      openLink(task.link);
-      setOpened((o) => ({ ...o, [task.id]: true }));
-      return;
-    }
+  async function claim(task: any, silent = false) {
     if (demo) { toast(t("openInTelegram")); return; }
     try {
       const r = await completeTask({ data: { initData, taskId: task.id } });
       setData((d) => d && { ...d, me: { ...d.me, balance: r.balance, power_level: r.power_level }, done: [...d.done, task.id] });
       haptic("success");
+      toast.success(`+${fmt(task.reward)} ORAI`);
     } catch (e: any) {
-      toast.error(e?.message === "TASK_NOT_VERIFIED" ? x("taskNotVerified") : e.message);
+      if (!silent) toast.error(e?.message === "TASK_NOT_VERIFIED" ? x("taskNotVerified") : e.message);
     }
   }
-
+  function onTask(task: any) {
+    if (!opened[task.id]) {
+      openLink(task.link);
+      setOpened((o) => ({ ...o, [task.id]: true }));
+      waiting.current = task;
+      return;
+    }
+    void claim(task);
+  }
   const ar = lang === "ar";
   return (
     <div>
@@ -65,12 +76,12 @@ function Tasks() {
               <div key={task.id} className={`flex items-center gap-3 px-4 py-3.5 ${i ? "border-t border-muted" : ""}`}>
                 <CoinIcon src={task.image_url || ORAI_ICON} className="size-11" />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-bold">{task.title}</div>
-                  <div className="mt-0.5 text-xs font-bold text-primary" dir="ltr">+{fmt(task.reward)} ORAI</div>
+                  <div className="truncate font-bold">{task.title_i18n?.[lang] || task.title}</div>
+                  <div className="mt-0.5 text-xs font-bold text-muted-foreground" dir="ltr">ORAI</div>
                 </div>
                 <button onClick={() => onTask(task)}
-                  className={`h-9 shrink-0 rounded-full px-4 text-xs font-bold transition active:scale-95 ${opened[task.id] ? "btn-orange" : "bg-accent text-accent-foreground"}`}>
-                  {opened[task.id] ? t("claim") : t("start")}
+                  className={`h-9 shrink-0 rounded-full px-4 text-xs font-bold transition active:scale-95 ${opened[task.id] ? "btn-orange" : "bg-accent text-primary"}`} dir="ltr">
+                  {opened[task.id] ? t("claim") : `+${fmt(task.reward)}`}
                 </button>
               </div>
             ))}

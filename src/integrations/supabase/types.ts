@@ -97,33 +97,42 @@ export type Database = {
       tasks: {
         Row: {
           active: boolean
+          chat_id: string | null
           created_at: string
           id: string
           image_url: string | null
+          kind: string
           link: string
           reward: number
           sort: number
           title: string
+          title_i18n: Json
         }
         Insert: {
           active?: boolean
+          chat_id?: string | null
           created_at?: string
           id?: string
           image_url?: string | null
+          kind?: string
           link: string
           reward?: number
           sort?: number
           title: string
+          title_i18n?: Json
         }
         Update: {
           active?: boolean
+          chat_id?: string | null
           created_at?: string
           id?: string
           image_url?: string | null
+          kind?: string
           link?: string
           reward?: number
           sort?: number
           title?: string
+          title_i18n?: Json
         }
         Relationships: []
       }

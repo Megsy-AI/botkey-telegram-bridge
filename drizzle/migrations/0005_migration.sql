@@ -1,0 +1,3 @@
+alter table public.tasks add column if not exists title_i18n jsonb not null default '{}'::jsonb, add column if not exists kind text not null default 'link', add column if not exists chat_id text;
+update public.tasks set kind='channel', chat_id='-1002616088306', title='Join Orange channel' where id='0b75523c-eb60-4689-adf1-76167b34db35';
+update public.tasks set kind='ston' where id='14ed77bd-74fe-4fe0-b147-bc2af2624fcd';
