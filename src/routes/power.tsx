@@ -132,7 +132,7 @@ function Power() {
   const me = data.me;
   const tiers = POWER_LEVELS.slice(1).slice(0, visible);
 
-  const current = POWER_LEVELS[me.power_level] ?? POWER_LEVELS[0];
+  const current = (POWER_LEVELS[me.power_level] ?? POWER_LEVELS[0])!;
   const boost = () => { haptic("light"); openLink(SWAP_URL); };
 
   return <div>
