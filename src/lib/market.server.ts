@@ -9,8 +9,20 @@ export async function marketSnapshot(db: any, force = false) {
     const asset = json.asset ?? {};
     return { symbol: asset.symbol ?? "", name: asset.display_name ?? "", image: asset.image_url ?? "", priceUsd: Number(asset.dex_price_usd || asset.third_party_price_usd || 0) };
   };
+  // STON has no ORAI liquidity yet; fall back to the on-chain DEX price from GeckoTerminal.
+  const gecko = async (addr: string) => {
+    const response = await fetch(`https://api.geckoterminal.com/api/v2/networks/ton/tokens/${addr}`, { headers: { Accept: "application/json" } });
+    if (!response.ok) return 0;
+    const json = await response.json() as any;
+    return Number(json?.data?.attributes?.price_usd || 0);
+  };
+  const withFallback = async (addr: string, geckoAddr: string) => {
+    const asset = await get(addr).catch(() => ({ symbol: "", name: "", image: "", priceUsd: 0 }));
+    if (!(asset.priceUsd > 0)) asset.priceUsd = await gecko(geckoAddr).catch(() => 0);
+    return asset;
+  };
   try {
-    const [orai, gram] = await Promise.all([get(ORAI_JETTON), get(GRAM_ADDRESS)]);
+    const [orai, gram] = await Promise.all([withFallback(ORAI_JETTON, ORAI_JETTON), withFallback(GRAM_ADDRESS, "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c")]);
     if (!Number.isFinite(orai.priceUsd) || orai.priceUsd <= 0) throw new Error("ORAI price unavailable");
     const result = { orai: { ...orai, symbol: "ORAI", name: orai.name || "Orange AI" }, gram: { ...gram, symbol: "GRAM", name: "Gram" }, updatedAt: new Date().toISOString(), stale: false };
     const { error } = await db.from("market_snapshots").upsert({ id: "orai", data: result, updated_at: result.updatedAt });

@@ -8,7 +8,7 @@ import { openLink, haptic } from "@/lib/telegram";
 import { fmt } from "@/lib/ton";
 import invitation from "@/assets/referral-invitation.jpg";
 import { shareReferral } from "@/lib/referral-share";
-import { Card, CoinIcon, GhostButton, ORAI_ICON, PrimaryButton } from "@/components/ui-kit";
+import { CoinIcon, GhostButton, ORAI_ICON, PrimaryButton, Segmented } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/tasks")({
   ssr: false,
@@ -52,55 +52,47 @@ function Tasks() {
     }
   }
 
+  const ar = lang === "ar";
   return (
     <div>
-      <div className="glass mb-4 grid grid-cols-2 rounded-2xl p-1">
-        {(["tasks", "refs"] as const).map((k) => (
-          <GhostButton key={k} onClick={() => setTab(k)}
-            className={`h-10 rounded-xl text-sm transition ${tab === k ? "bg-card text-foreground shadow" : "text-muted-foreground"}`}>
-            {k === "tasks" ? t("tasksTab") : t("referralsTab")}
-          </GhostButton>
-        ))}
-      </div>
+      <Segmented value={tab} onChange={setTab} options={[{ key: "tasks", label: t("tasksTab") }, { key: "refs", label: t("referralsTab") }]} />
 
       {tab === "tasks" ? (
-        <div className="space-y-3">
-          {pending.length === 0 && <div className="py-10 text-center text-sm text-muted-foreground">{x("allDone")}</div>}
-          {pending.map((task: any) => (
-            <Card key={task.id} className="flex items-center gap-3">
-              <CoinIcon src={task.image_url || ORAI_ICON} className="size-12" />
-              <div className="min-w-0 flex-1">
-                <div className="truncate">{task.title}</div>
-                <div className="text-sm text-primary">+{fmt(task.reward)} ORAI</div>
+        pending.length === 0
+          ? <div className="rounded-2xl bg-card py-12 text-center text-sm font-bold text-muted-foreground">{x("allDone")}</div>
+          : <div className="overflow-hidden rounded-2xl bg-card">
+            {pending.map((task: any, i: number) => (
+              <div key={task.id} className={`flex items-center gap-3 px-4 py-3.5 ${i ? "border-t border-muted" : ""}`}>
+                <CoinIcon src={task.image_url || ORAI_ICON} className="size-11" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-bold">{task.title}</div>
+                  <div className="mt-0.5 text-xs font-bold text-primary" dir="ltr">+{fmt(task.reward)} ORAI</div>
+                </div>
+                <button onClick={() => onTask(task)}
+                  className={`h-9 shrink-0 rounded-full px-4 text-xs font-bold transition active:scale-95 ${opened[task.id] ? "btn-orange" : "bg-accent text-accent-foreground"}`}>
+                  {opened[task.id] ? t("claim") : t("start")}
+                </button>
               </div>
-              <GhostButton onClick={() => onTask(task)} className="h-10">
-                {opened[task.id] ? t("claim") : t("start")}
-              </GhostButton>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <img src={invitation} alt={t("inviteFriends")} className="aspect-[3/2] w-full rounded-lg object-cover" />
-          <div className="py-4 text-center">
-            <div className="text-2xl">{t("inviteFriends")}</div>
-            <div className="mt-2 text-sm text-muted-foreground">{lang === "ar" ? "اربح 10% إضافية من مكافآت تعدين أصدقائك" : "Earn an additional 10% of friends' mining rewards"}</div>
-            <div className="mt-3 text-2xl text-primary">{fmt(Number(me.referral_earned ?? 0), 4)} ORAI</div>
-          </div>
-          <Card>
-            <div className="text-lg">{t("inviteFriends")}</div>
-            <div className="mt-1 text-sm text-muted-foreground">{t("inviteText")} · +{REFERRAL_BONUS} ORAI</div>
-            <PrimaryButton className="mt-4" onClick={() => shareReferral(invitation, link, lang).catch(() => toast.error(t("pending")))}>
-              {lang === "ar" ? "مشاركة الدعوة والصورة" : "Share invitation & image"}
-            </PrimaryButton>
-            <GhostButton className="mt-2 w-full" onClick={() => { navigator.clipboard.writeText(link); toast(t("copied")); }}>{t("copyLink")}</GhostButton>
-          </Card>
-          <Card>
-            <div className="mb-2 text-sm text-muted-foreground">{t("friends")} · {data.referrals.length}</div>
-            {data.referrals.map((r: any) => (
-              <div key={r.id} className="border-t border-muted py-2 first:border-0">{r.first_name || r.username}</div>
             ))}
-          </Card>
+          </div>
+      ) : (
+        <div className="space-y-4">
+          <img src={invitation} alt={t("inviteFriends")} className="aspect-[3/2] w-full rounded-3xl object-cover" />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-card p-4 text-center"><div className="text-2xl font-bold tabular-nums">{data.referrals.length}</div><div className="mt-1 text-xs text-muted-foreground">{t("friends")}</div></div>
+            <div className="rounded-2xl bg-card p-4 text-center"><div className="truncate text-2xl font-bold tabular-nums text-primary" dir="ltr">{fmt(Number(me.referral_earned ?? 0), 2)}</div><div className="mt-1 text-xs text-muted-foreground">ORAI</div></div>
+          </div>
+          <p className="px-2 text-center text-sm text-muted-foreground">{ar ? `اربح 10% من تعدين أصدقائك + ${REFERRAL_BONUS} ORAI لكل دعوة` : `Earn 10% of friends' mining + ${REFERRAL_BONUS} ORAI per invite`}</p>
+          <PrimaryButton onClick={() => shareReferral(invitation, link, lang).catch(() => toast.error(t("pending")))}>{t("inviteFriends")}</PrimaryButton>
+          <GhostButton className="w-full font-bold" onClick={() => { navigator.clipboard.writeText(link); toast(t("copied")); }}>{t("copyLink")}</GhostButton>
+          {data.referrals.length > 0 && <div className="overflow-hidden rounded-2xl bg-card">
+            {data.referrals.map((r: any, i: number) => (
+              <div key={r.id} className={`flex items-center gap-3 px-4 py-3 ${i ? "border-t border-muted" : ""}`}>
+                <div className="flex size-9 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground">{(r.first_name || r.username || "?").slice(0, 1).toUpperCase()}</div>
+                <div className="truncate font-bold">{r.first_name || r.username}</div>
+              </div>
+            ))}
+          </div>}
         </div>
       )}
     </div>

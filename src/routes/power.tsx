@@ -20,8 +20,7 @@ import nft10 from "@/assets/nft/display10.jpg";
 import { ArrowUpRight } from "lucide-react";
 import { openLink, haptic } from "@/lib/telegram";
 import { fmt, commentPayload } from "@/lib/ton";
-import { Card, CoinIcon, GhostButton, GRAM_ICON, PrimaryButton } from "@/components/ui-kit";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Card, CoinIcon, GhostButton, GRAM_ICON, PrimaryButton, Segmented } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/power")({
   ssr: false,
@@ -109,11 +108,10 @@ function NftTab() {
 
 function Power() {
   const { data, t, x, demo, initData, patchMe, lang } = useStore();
+  const ar = lang === "ar";
   const { tab } = Route.useSearch();
   const navigate = useNavigate();
-  const [gramPrice, setGramPrice] = useState(0);
   const [visible, setVisible] = useState(24);
-  const [selected, setSelected] = useState<(typeof POWER_LEVELS)[number] | null>(null);
 
   useEffect(() => {
     if (demo) return;
@@ -121,7 +119,7 @@ function Power() {
     async function check() {
       try {
         const result = await verifyHoldings({ data: { initData } });
-        if (active) { patchMe(result); setGramPrice(Number(result.market?.gram?.priceUsd) || 0); }
+        if (active) patchMe(result);
       } catch { /* silent auto-check */ }
     }
     void check();
@@ -133,32 +131,40 @@ function Power() {
   if (!data) return null;
   const me = data.me;
   const tiers = POWER_LEVELS.slice(1).slice(0, visible);
-  const gramAmount = selected && gramPrice > 0 ? selected.price / gramPrice : 0;
+
+  const current = (POWER_LEVELS[me.power_level] ?? POWER_LEVELS[0])!;
+  const boost = () => { haptic("light"); openLink(SWAP_URL); };
 
   return <div>
-    <div className="glass mb-4 grid grid-cols-2 rounded-2xl p-1">
-      {(["power", "nft"] as const).map((k) => (
-        <GhostButton key={k} onClick={() => navigate({ to: "/power", search: { tab: k }, replace: true })}
-          className={`h-10 rounded-xl text-sm transition ${tab === k ? "bg-card text-foreground shadow" : "text-muted-foreground"}`}>
-          {k === "power" ? t("power") : "NFT"}
-        </GhostButton>
-      ))}
-    </div>
+    <Segmented value={tab} onChange={(k) => navigate({ to: "/power", search: { tab: k }, replace: true })}
+      options={[{ key: "power", label: t("power") }, { key: "nft", label: "NFT" }]} />
 
     {tab === "nft" ? <NftTab /> : <>
-      <PrimaryButton onClick={() => openLink(SWAP_URL)}>{t("buyOnSton")}</PrimaryButton>
-      <div className="mb-2 mt-5 grid grid-cols-[1fr_1fr] px-3 text-xs text-muted-foreground"><span>{x("requiredHoldings")}</span><span className="text-end">{x("dailyReward")}</span></div>
-      <div className="space-y-3">{tiers.map(l => <Card key={l.level} className={`rounded-lg ${l.level === me.power_level ? "ring-2 ring-primary" : ""}`}><div className="mb-3 flex items-center justify-between"><div className="text-xl">${fmt(l.price, 2)}</div><div className="text-end"><div className="text-lg text-primary">${fmt(l.perDay, 2)}</div><div className="mt-1 text-xs text-muted-foreground">{t("perDay")}</div></div></div><PrimaryButton onClick={() => setSelected(l)} className="h-10 rounded-lg text-sm">{lang === "ar" ? "زيادة قوة التعدين" : "Increase mining power"}</PrimaryButton></Card>)}</div>
+      <div className="rounded-3xl bg-primary p-5 text-primary-foreground">
+        <div className="text-xs font-bold opacity-80">{ar ? "قوتك الحالية" : "Current power"}</div>
+        <div className="mt-2 flex items-end justify-between gap-3">
+          <div className="text-3xl font-bold tabular-nums" dir="ltr">${fmt(current.price, 2)}</div>
+          <div className="text-end"><div className="text-lg font-bold tabular-nums" dir="ltr">+${fmt(current.perDay, 2)}</div><div className="text-xs opacity-80">{t("perDay")}</div></div>
+        </div>
+      </div>
+
+      <div className="mt-6 mb-2 flex justify-between px-1 text-xs font-bold text-muted-foreground"><span>{x("requiredHoldings")}</span><span>{x("dailyReward")}</span></div>
+      <div className="overflow-hidden rounded-2xl bg-card">
+        {tiers.map((l, i) => {
+          const active = l.level === me.power_level, reached = l.level <= me.power_level;
+          return <div key={l.level} className={`flex items-center gap-3 px-4 py-3.5 ${i ? "border-t border-muted" : ""} ${active ? "bg-accent" : ""}`}>
+            <div className="min-w-0 flex-1" dir="ltr">
+              <div className="text-base font-bold tabular-nums">${fmt(l.price, 2)}</div>
+              <div className="text-xs font-bold tabular-nums text-primary">+${fmt(l.perDay, 2)} / {ar ? "يوم" : "day"}</div>
+            </div>
+            {reached
+              ? <span className="text-xs font-bold text-primary">{active ? (ar ? "الحالي" : "Current") : "✓"}</span>
+              : <button onClick={boost} className="btn-orange h-9 shrink-0 rounded-full px-4 text-xs font-bold active:scale-95">{ar ? "زيادة القوة" : "Boost"}</button>}
+          </div>;
+        })}
+      </div>
       {POWER_LEVELS.length - 1 > visible && <GhostButton className="mt-4 w-full" onClick={() => setVisible(v => v + 24)}>{x("loadMore")}</GhostButton>}
       <p className="mt-4 text-xs text-muted-foreground">{x("estimate")}</p>
-      <Dialog open={selected !== null} onOpenChange={open => { if (!open) setSelected(null); }}>
-        <DialogContent>
-          <DialogTitle>{x("buy")} · ${fmt(selected?.price ?? 0, 2)}</DialogTitle>
-          <DialogDescription>{x("gramAmount")}</DialogDescription>
-          <div className="flex items-center justify-center gap-2 break-all text-2xl"><CoinIcon src={GRAM_ICON} className="size-7" />{gramAmount > 0 ? fmt(gramAmount, 4) : "—"}</div>
-          <PrimaryButton disabled={!(gramAmount > 0)} onClick={async () => { try { await navigator.clipboard.writeText(gramAmount.toFixed(4)); toast(t("copied")); openLink(SWAP_URL); setSelected(null); } catch { openLink(SWAP_URL); setSelected(null); } }}>{x("payWithGram")}</PrimaryButton>
-        </DialogContent>
-      </Dialog>
     </>}
   </div>;
 }

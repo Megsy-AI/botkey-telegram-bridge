@@ -47,15 +47,15 @@ function Frame() {
         <div className="glass mb-3 rounded-2xl px-4 py-2 text-center text-xs text-muted-foreground">{t("openInTelegram")}</div>
       )}
       <Outlet />
-      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md px-4">
-        <div className="glass-strong flex items-center justify-between gap-1.5 rounded-2xl px-2 py-2">
+      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md px-5">
+        <div className="glass-strong grid grid-cols-5 gap-2 rounded-[26px] p-2">
           {tabs.map(({ to, icon: Icon, key }) => {
             const active = pathname === to;
             return (
               <Link key={to} to={to}
-                className={`flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[10px] font-semibold transition ${active ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground"}`}>
-                <Icon className="size-5" strokeWidth={2.4} />
-                {key === "profile" ? x("profile") : t(key)}
+                className={`flex h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] transition ${active ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground"}`}>
+                <Icon className="size-[22px]" strokeWidth={2.2} />
+                <span className="w-full truncate px-0.5 text-center text-[10px] font-bold leading-none">{key === "profile" ? x("profile") : t(key)}</span>
               </Link>
             );
           })}

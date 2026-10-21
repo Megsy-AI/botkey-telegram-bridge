@@ -199,15 +199,29 @@ export const requestWithdraw = createServerFn({ method: "POST" })
   });
 
 
+async function gramBalance(address: string) {
+  const r = await fetch(`https://toncenter.com/api/v3/account?address=${encodeURIComponent(address)}`);
+  if (!r.ok) throw new Error(`Blockchain lookup failed [${r.status}]`);
+  const j = (await r.json()) as any;
+  return Number(j.balance ?? 0) / 1e9;
+}
+
 async function syncPower(db: any, id: number) {
   const me = await loadUser(db, id);
   const { marketSnapshot } = await import("./market.server");
   const market = await marketSnapshot(db);
-  let external = 0;
-  try { if (me.wallet_verified && me.wallet_address) external = await oraiHoldings(me.wallet_address); }
+  let external = 0, gramHeld = 0;
+  try {
+    if (me.wallet_verified && me.wallet_address) {
+      external = await oraiHoldings(me.wallet_address);
+      gramHeld = await gramBalance(me.wallet_address);
+    }
+  }
   catch { return { ...me, market, holdings: null, syncUnavailable: true }; }
   if (!market.orai.priceUsd || market.stale) return { ...me, market, holdings: Number(me.balance) + external, syncUnavailable: true };
-  const holdings = Number(me.balance) + external;
+  // GRAM held in the verified wallet counts toward holdings at its USD value, expressed in ORAI.
+  const gramAsOrai = market.gram?.priceUsd > 0 ? gramHeld * market.gram.priceUsd / market.orai.priceUsd : 0;
+  const holdings = Number(me.balance) + external + gramAsOrai;
   const level = levelForHoldings(holdings, market.orai.priceUsd);
   const pro = me.subscribed_until && new Date(me.subscribed_until).getTime() > Date.now();
   const { data: owned } = await db.from("nfts").select("tier").eq("user_id", id);
@@ -364,7 +378,7 @@ export const proveWallet = createServerFn({ method: "POST" }).inputValidator((i:
   if (!me.wallet_nonce || Date.now() - Number(me.wallet_nonce.split(":")[0]) > 300000) throw new Error("Request a new wallet verification");
   const { getRequest } = await import("@tanstack/react-start/server");
   const { verifyWalletProof } = await import("./wallet-proof.server");
-  const address = await verifyWalletProof(data.address, data.proof, me.wallet_nonce, new URL(getRequest().url).host);
+  const address = await verifyWalletProof(data.address, data.proof, me.wallet_nonce, [new URL(getRequest().url).host, "orange-telegram.vercel.app", "botkey-telegram-bridge.lovable.app"]);
   const { data: other } = await db.from("tg_users").select("id").eq("wallet_address", address).eq("wallet_verified", true).neq("id", user.id).limit(1);
   if (other?.length) throw new Error("Wallet already linked to another account");
   const { error } = await db.from("tg_users").update({ wallet_address: address, wallet_verified: true, wallet_nonce: null }).eq("id", user.id).eq("wallet_nonce", me.wallet_nonce);
