@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { Link, Outlet, useLocation, useRouter } from "@tanstack/react-router";
-import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import { House, Gift, Gauge, Wallet, CircleUserRound } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { StoreProvider, useStore } from "@/lib/store";
@@ -49,12 +48,12 @@ function Frame() {
       )}
       <Outlet />
       <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md px-4">
-        <div className="glass-strong flex items-center justify-between rounded-2xl px-2 py-2">
+        <div className="glass-strong flex items-center justify-between gap-1.5 rounded-2xl px-2 py-2">
           {tabs.map(({ to, icon: Icon, key }) => {
             const active = pathname === to;
             return (
               <Link key={to} to={to}
-                className={`flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[10px] transition ${active ? "bg-accent text-primary" : "text-muted-foreground"}`}>
+                className={`flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[10px] font-semibold transition ${active ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground"}`}>
                 <Icon className="size-5" strokeWidth={2.4} />
                 {key === "profile" ? x("profile") : t(key)}
               </Link>
