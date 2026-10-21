@@ -1,7 +1,7 @@
 # Orange — task roadmap
 
 ## Current requests
-- [ ] Republish the current app through the Vercel front door.
+- [x] Republish the current app through the Vercel front door; production READY and browser HTTP 200 with no page errors. Lovable badge remains visible due to plan restriction.
 - [ ] Audit actual website and bot language coverage and report translation fallbacks.
 - [ ] Continue NFT setup discussion; obtain collection details needed for a safe mint review.
 
