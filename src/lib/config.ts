@@ -34,7 +34,7 @@ export function nftBenefits(tiers: number[]) {
   const best = NFT_TIERS.filter(t => tiers.includes(t.tier)).sort((a, b) => b.tier - a.tier)[0];
   return { mining: 1 + (best?.mining ?? 0), referralRate: REFERRAL_COMMISSION + (best?.referral ?? 0), tasks: best?.tasks ?? 1 };
 }
-export const NFT_PRICE_GRAM = NFT_TIERS[0].price;
+export const NFT_PRICE_GRAM = NFT_TIERS[0]!.price;
 export const SUPPORTER_URL = "https://megsyai.com";
 export const MARKET_MAX_AGE = 3600_000;
 const thresholds: number[] = [];

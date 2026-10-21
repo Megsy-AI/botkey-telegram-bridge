@@ -15,7 +15,7 @@ import { NFT_TIERS, nftBenefits } from "./config";
 describe("NFT tiers", () => {
   it("has 10 tiers with rising price and mining boost", () => {
     expect(NFT_TIERS).toHaveLength(10);
-    for (let i = 1; i < 10; i++) { expect(NFT_TIERS[i].price).toBeGreaterThan(NFT_TIERS[i - 1].price); expect(NFT_TIERS[i].mining).toBeGreaterThan(NFT_TIERS[i - 1].mining); }
+    for (let i = 1; i < 10; i++) { expect(NFT_TIERS[i]!.price).toBeGreaterThan(NFT_TIERS[i - 1]!.price); expect(NFT_TIERS[i]!.mining).toBeGreaterThan(NFT_TIERS[i - 1]!.mining); }
   });
   it("uses the best owned tier, not stacking", () => {
     expect(nftBenefits([])).toEqual({ mining: 1, referralRate: 0.1, tasks: 1 });
