@@ -26,7 +26,17 @@ export const Route = createFileRoute("/power")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({ tab: s["tab"] === "nft" ? ("nft" as const) : ("power" as const) }),
   head: () => ({ meta: [
-    { title: "Orange — Holding powconst NFT_IMAGES = [nft1, nft2, nft3, nft4, nft5, nft6, nft7, nft8, nft9, nft10];
+    { title: "Orange — Holding power & NFT" },
+    { name: "description", content: "Holding-based mining power tiers and ORAI NFT characters with mining, referral and task boosts." },
+    { property: "og:title", content: "Orange — Holding power & NFT" },
+    { property: "og:description", content: "Holding-based mining power tiers and ORAI NFT characters with mining, referral and task boosts." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
+  component: Power,
+});
+
+const NFT_IMAGES = [nft1, nft2, nft3, nft4, nft5, nft6, nft7, nft8, nft9, nft10];
 
 function NftTab() {
   const { data, t, initData, demo, lang } = useStore();
