@@ -69,6 +69,9 @@ export async function sendOrai(to: string, amount: number, queryId = Date.now())
 /** Mints the next item of the owner's NFT collection straight to the buyer's wallet. */
 export async function mintNft(collection: string, itemIndex: number, owner: string) {
   const { key, contract } = await payoutWallet();
+  const info = await fetch(`https://toncenter.com/api/v3/nft/collections?collection_address=${encodeURIComponent(collection)}`).then(r => r.json() as Promise<any>);
+  const ownerRaw = info?.nft_collections?.[0]?.owner_address;
+  if (!ownerRaw || !Address.parse(ownerRaw).equals(contract.address)) throw new Error("Collection owner is not the payout wallet; mint queued");
   const content = beginCell()
     .storeAddress(Address.parse(owner))
     .storeRef(beginCell().storeUint(0, 8).endCell())

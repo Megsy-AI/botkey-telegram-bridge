@@ -1,0 +1,8 @@
+ALTER TABLE public.nfts ADD COLUMN IF NOT EXISTS tier int NOT NULL DEFAULT 1;
+ALTER TABLE public.nfts ADD COLUMN IF NOT EXISTS mint_status text NOT NULL DEFAULT 'pending';
+CREATE UNIQUE INDEX IF NOT EXISTS nfts_tx_hash_key ON public.nfts(tx_hash) WHERE tx_hash IS NOT NULL;
+ALTER TABLE public.tg_users ADD COLUMN IF NOT EXISTS referral_rate numeric NOT NULL DEFAULT 0.10;
+CREATE OR REPLACE FUNCTION public.orange_mining_claim(p_user_id bigint)
+ RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
+AS $function$ DECLARE u public.tg_users; r public.tg_users; elapsed numeric; reward numeric; ts timestamptz := now(); BEGIN SELECT * INTO u FROM public.tg_users WHERE id=p_user_id FOR UPDATE; IF u.mining_started_at IS NULL THEN RAISE EXCEPTION 'Not mining'; END IF; IF ts < u.mining_started_at + interval '2 hours' THEN RAISE EXCEPTION 'Mining not finished'; END IF; elapsed := greatest(0, extract(epoch from (least(ts,u.mining_started_at + interval '2 hours') - coalesce(u.mining_settled_at,u.mining_started_at)))); reward := u.mining_pending + elapsed / 86400 * u.mining_rate_daily; UPDATE public.tg_users SET balance=balance+reward, mining_started_at=ts, mining_settled_at=ts, mining_pending=0 WHERE id=p_user_id; IF u.referred_by IS NOT NULL AND u.referred_by<>p_user_id THEN SELECT * INTO r FROM public.tg_users WHERE id=u.referred_by; UPDATE public.tg_users SET balance=balance+reward*coalesce(r.referral_rate,0.10), referral_earned=referral_earned+reward*coalesce(r.referral_rate,0.10) WHERE id=u.referred_by; END IF; RETURN jsonb_build_object('balance',u.balance+reward,'mining_started_at',ts); END $function$;
+REVOKE EXECUTE ON FUNCTION public.orange_mining_claim(bigint) FROM PUBLIC, anon, authenticated;

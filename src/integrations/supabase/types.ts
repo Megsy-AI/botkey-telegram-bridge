@@ -37,8 +37,10 @@ export type Database = {
           created_at: string
           id: string
           item_index: number | null
+          mint_status: string
           nft_address: string | null
           price_gram: number
+          tier: number
           tx_hash: string | null
           user_id: number
         }
@@ -46,8 +48,10 @@ export type Database = {
           created_at?: string
           id?: string
           item_index?: number | null
+          mint_status?: string
           nft_address?: string | null
           price_gram?: number
+          tier?: number
           tx_hash?: string | null
           user_id: number
         }
@@ -55,8 +59,10 @@ export type Database = {
           created_at?: string
           id?: string
           item_index?: number | null
+          mint_status?: string
           nft_address?: string | null
           price_gram?: number
+          tier?: number
           tx_hash?: string | null
           user_id?: number
         }
@@ -135,6 +141,7 @@ export type Database = {
           photo_url: string | null
           power_level: number
           referral_earned: number
+          referral_rate: number
           referred_by: number | null
           subscribed_until: string | null
           username: string | null
@@ -155,6 +162,7 @@ export type Database = {
           photo_url?: string | null
           power_level?: number
           referral_earned?: number
+          referral_rate?: number
           referred_by?: number | null
           subscribed_until?: string | null
           username?: string | null
@@ -175,6 +183,7 @@ export type Database = {
           photo_url?: string | null
           power_level?: number
           referral_earned?: number
+          referral_rate?: number
           referred_by?: number | null
           subscribed_until?: string | null
           username?: string | null
