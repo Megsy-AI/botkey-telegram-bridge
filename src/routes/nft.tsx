@@ -15,6 +15,8 @@ export const Route = createFileRoute("/nft")({
   ssr: false,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Orange — NFT" },
       { name: "description", content: "Buy an ORAI NFT — minted instantly to your wallet." },
       { property: "og:title", content: "ORAI NFT" },

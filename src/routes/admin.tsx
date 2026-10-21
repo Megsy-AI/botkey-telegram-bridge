@@ -10,6 +10,8 @@ export const Route = createFileRoute("/admin")({
   ssr: false,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Orange — Admin" },
       { name: "description", content: "ORAI admin: stats, withdrawals and task management." },
       { property: "og:title", content: "ORAI Admin" },

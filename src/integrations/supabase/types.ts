@@ -134,6 +134,7 @@ export type Database = {
           mining_started_at: string | null
           photo_url: string | null
           power_level: number
+          referral_earned: number
           referred_by: number | null
           subscribed_until: string | null
           username: string | null
@@ -153,6 +154,7 @@ export type Database = {
           mining_started_at?: string | null
           photo_url?: string | null
           power_level?: number
+          referral_earned?: number
           referred_by?: number | null
           subscribed_until?: string | null
           username?: string | null
@@ -172,6 +174,7 @@ export type Database = {
           mining_started_at?: string | null
           photo_url?: string | null
           power_level?: number
+          referral_earned?: number
           referred_by?: number | null
           subscribed_until?: string | null
           username?: string | null
@@ -220,6 +223,16 @@ export type Database = {
     }
     Functions: {
       orange_mining_claim: { Args: { p_user_id: number }; Returns: Json }
+      orange_refund_withdrawal: { Args: { p_id: string }; Returns: undefined }
+      orange_reserve_withdrawal: {
+        Args: {
+          p_address: string
+          p_amount: number
+          p_fee: string
+          p_user_id: number
+        }
+        Returns: string
+      }
       orange_sync_power: {
         Args: { p_level: number; p_rate: number; p_user_id: number }
         Returns: undefined

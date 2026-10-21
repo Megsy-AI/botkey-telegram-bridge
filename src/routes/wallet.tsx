@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useTonAddress, useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import { toNano } from "@ton/core";
 import { useStore } from "@/lib/store";
-import { getMarket, walletBalances, setWallet, requestWithdraw, walletChallenge, proveWallet } from "@/lib/api.functions";
+import { getMarket, walletBalances, setWallet, requestWithdraw, checkWithdrawal, walletChallenge, proveWallet } from "@/lib/api.functions";
 import { MIN_WITHDRAW, RECEIVE_WALLET, WITHDRAW_FEE_GRAM } from "@/lib/config";
 import { commentPayload, fmt, oraiTransferMessage, short } from "@/lib/ton";
 import { Card, CoinIcon, GhostButton, GRAM_ICON, ORAI_ICON, PrimaryButton, Title } from "@/components/ui-kit";
@@ -42,8 +42,9 @@ function WalletPage() {
        const msg = coin === "GRAM" ? { address: RECEIVE_WALLET, amount: toNano(amount).toString(), payload: commentPayload(`dep:${me.id}`) } : await oraiTransferMessage(address, RECEIVE_WALLET, n, `dep:${me.id}`);
        await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [msg] }); toast(t("pending"));
      } else {
+       await checkWithdrawal({ data: { initData, amount: n } });
        await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [{ address: RECEIVE_WALLET, amount: toNano(String(WITHDRAW_FEE_GRAM)).toString(), payload: commentPayload(`fee:${me.id}`) }] });
-       toast(t("pending")); const result = await requestWithdraw({ data: { initData, amount: n } }); patchMe({ balance: result.balance }); await refresh(); toast.success(result.status === "sent" ? t("sent") : t("pending"));
+       toast(t("pending")); const result = await requestWithdraw({ data: { initData, amount: n } }); patchMe({ balance: result.balance }); await refresh(); toast(t("pending"));
      }
      setAmount(""); setMode(null);
    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }

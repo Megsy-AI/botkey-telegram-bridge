@@ -6,6 +6,8 @@ export const Route = createFileRoute("/swap")({
   beforeLoad: () => { throw redirect({ to: "/profile", statusCode: 301 }); },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Orange — Swap" },
       { name: "description", content: "Buy ORAI with GRAM on STON.fi." },
       { property: "og:title", content: "Swap GRAM to ORAI" },

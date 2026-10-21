@@ -17,6 +17,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SwapRouteImport } from './routes/swap'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as ApiPublicJobsMarketRouteImport } from './routes/api/public/jobs/market'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -59,6 +60,11 @@ const WalletRoute = WalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicJobsMarketRoute = ApiPublicJobsMarketRouteImport.update({
+  id: '/api/public/jobs/market',
+  path: '/api/public/jobs/market',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/swap': typeof SwapRoute
   '/tasks': typeof TasksRoute
   '/wallet': typeof WalletRoute
+  '/api/public/jobs/market': typeof ApiPublicJobsMarketRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/swap': typeof SwapRoute
   '/tasks': typeof TasksRoute
   '/wallet': typeof WalletRoute
+  '/api/public/jobs/market': typeof ApiPublicJobsMarketRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesById {
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/swap': typeof SwapRoute
   '/tasks': typeof TasksRoute
   '/wallet': typeof WalletRoute
+  '/api/public/jobs/market': typeof ApiPublicJobsMarketRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRouteTypes {
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/tasks'
     | '/wallet'
+    | '/api/public/jobs/market'
     | '/api/public/telegram/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/tasks'
     | '/wallet'
+    | '/api/public/jobs/market'
     | '/api/public/telegram/webhook'
   id:
     | '__root__'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/tasks'
     | '/wallet'
+    | '/api/public/jobs/market'
     | '/api/public/telegram/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -145,6 +157,7 @@ export interface RootRouteChildren {
   SwapRoute: typeof SwapRoute
   TasksRoute: typeof TasksRoute
   WalletRoute: typeof WalletRoute
+  ApiPublicJobsMarketRoute: typeof ApiPublicJobsMarketRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
 
@@ -206,6 +219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WalletRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/jobs/market': {
+      id: '/api/public/jobs/market'
+      path: '/api/public/jobs/market'
+      fullPath: '/api/public/jobs/market'
+      preLoaderRoute: typeof ApiPublicJobsMarketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
@@ -225,6 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   SwapRoute: SwapRoute,
   TasksRoute: TasksRoute,
   WalletRoute: WalletRoute,
+  ApiPublicJobsMarketRoute: ApiPublicJobsMarketRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
 export const routeTree = rootRouteImport

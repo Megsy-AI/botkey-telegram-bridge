@@ -9,15 +9,16 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
   vite: {
+    optimizeDeps: { include: ["buffer"] },
     plugins: [
       {
         // Bundle the real `buffer` package in the client build; otherwise Vite
         // swaps it for an empty browser-external stub and @ton/core crashes.
         name: "buffer-polyfill-resolve",
         enforce: "pre",
-        resolveId(source: string, _importer: string | undefined, options: { ssr?: boolean }) {
+        resolveId(source: string, _importer: string | undefined, options: { ssr?: boolean | undefined }) {
           // Client bundle only — the server (workerd) has a native buffer builtin.
-          if (options?.ssr) return null;
+          if (options?.ssr || this.environment?.mode === "dev") return null;
           if (source === "buffer" || source === "node:buffer") {
             return fileURLToPath(new URL("./node_modules/buffer/index.js", import.meta.url));
           }
