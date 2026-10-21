@@ -1,14 +1,15 @@
 # Orange — task roadmap
 
 ## Current requests
-- [ ] Refresh bot token and register webhook/menu for the new bot.
-- [ ] Dedicated referral artwork; remove wallet/tasks titles; vertical rectangular NFT showcase and per-tier increase-power buttons.
-- [ ] Use owner-provided https://getgems.io/orangeai above the NFT list; provide receive-wallet royalty address.
-- [ ] Review GitHub→Vercel standalone hosting and badge removal; preserve private Cloud access.
+- [x] Refresh bot token: getMe identifies @sramaibot; webhook and menu registered; referral links updated.
+- [x] Dedicated referral artwork; remove wallet/tasks titles; ten vertical rectangular NFT showcases and per-tier increase-power buttons. Browser tested at 434×763 and 1280×1800; no runtime errors or overflow. Eleven existing tests pass.
+- [x] Owner-provided https://getgems.io/orangeai above NFT list; receive-wallet royalty address provided.
+- [x] Review GitHub→Vercel standalone hosting: current Vercel is a catch-all proxy; full standalone app requires a secure replacement for inaccessible managed service-role access. GitHub API connector has no accessible connection; Git sync must be managed through project Git settings.
+- [ ] Badge removal / independent GitHub→Vercel deployment blocked: badge tool requires Pro; independent hosting needs a separately approved secure backend migration, not a proxy or exposed credentials.
 - [x] Republish the current app through the Vercel front door; production READY and browser HTTP 200 with no page errors. Lovable badge remains visible due to plan restriction.
 - [x] Audit actual language coverage: EN/AR main catalogs and profile content, 11 partial website languages; /start localized in 7 languages. Bot reminders not implemented.
 - [x] Explain proposed NFT purchase, mint, ownership and additional-mining benefits; no bonus rates approved yet.
-- [ ] NFT activation awaits collection address/contract, GRAM jetton address, artwork, price and approved benefit rules; implement safe orders and confirmed mint before sale.
+- [ ] NFT activation awaits owner-signed collection ownership transfer and verified contract mint/ownership flow; native TON is labeled GRAM, collection and artwork are configured.
 
 ## Completed
 - [x] Continuous mining, two-hour accumulation cap and automatic restart on claim; atomic claim and 10% additional referral credit.

@@ -21,3 +21,4 @@
 - Payout signing validates the configured wallet address and uses the correct wallet contract version; submissions use query IDs and on-chain reconciliation, with atomic reservations. Why: do not mark broadcast as confirmed or refund ambiguous broadcasts.
 - Profile is the fifth tab; /swap permanently redirects to /profile. Why: preserve the old published URL while keeping current navigation.
 - Vercel, if enabled, is only a reverse-proxy front door to the Lovable deployment. Why: preserve the managed runtime, Telegram verification and Cloud secrets without exporting privileged credentials.
+- NFT collectible metadata artwork stays separate from rectangular display artwork; referral sharing uses its own imported image. Why: presentation changes must not change minted item metadata.
