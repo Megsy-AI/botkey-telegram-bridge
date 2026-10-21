@@ -23,3 +23,6 @@ describe("NFT tiers", () => {
     expect(b.mining).toBeCloseTo(3.5); expect(b.referralRate).toBeCloseTo(0.25); expect(b.tasks).toBe(2.5);
   });
 });
+describe("NFT prices", () => {
+  it("start at 2 GRAM", () => { expect(NFT_TIERS[0]!.price).toBe(2); });
+});

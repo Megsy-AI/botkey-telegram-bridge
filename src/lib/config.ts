@@ -18,15 +18,15 @@ export const NFT_COLLECTION_ADDRESS = "EQAUV6nlIAxPqWMy-vpuuTXu14bGyYJjeK7wgiqs0
 export const NFT_COLLECTION_URL = "https://getgems.io/orangeai";
 /** Ten NFT tiers paid in GRAM: higher price → bigger mining, referral and task boosts. */
 export const NFT_TIERS = [
-  { tier: 1, name: "Orange Rookie", price: 0.5, mining: 0.03, referral: 0.01, tasks: 1.05 },
-  { tier: 2, name: "Orange Scout", price: 1, mining: 0.06, referral: 0.02, tasks: 1.10 },
-  { tier: 3, name: "Orange Explorer", price: 2.5, mining: 0.12, referral: 0.03, tasks: 1.20 },
-  { tier: 4, name: "Orange Pioneer", price: 5, mining: 0.20, referral: 0.04, tasks: 1.30 },
-  { tier: 5, name: "Orange Guardian", price: 10, mining: 0.35, referral: 0.05, tasks: 1.40 },
-  { tier: 6, name: "Orange Commander", price: 20, mining: 0.50, referral: 0.06, tasks: 1.50 },
-  { tier: 7, name: "Orange Master", price: 40, mining: 0.75, referral: 0.08, tasks: 1.65 },
-  { tier: 8, name: "Orange Champion", price: 75, mining: 1.00, referral: 0.10, tasks: 1.80 },
-  { tier: 9, name: "Orange Legend", price: 150, mining: 1.50, referral: 0.12, tasks: 2.00 },
+  { tier: 1, name: "Orange Rookie", price: 2, mining: 0.03, referral: 0.01, tasks: 1.05 },
+  { tier: 2, name: "Orange Scout", price: 4, mining: 0.06, referral: 0.02, tasks: 1.10 },
+  { tier: 3, name: "Orange Explorer", price: 7, mining: 0.12, referral: 0.03, tasks: 1.20 },
+  { tier: 4, name: "Orange Pioneer", price: 12, mining: 0.20, referral: 0.04, tasks: 1.30 },
+  { tier: 5, name: "Orange Guardian", price: 20, mining: 0.35, referral: 0.05, tasks: 1.40 },
+  { tier: 6, name: "Orange Commander", price: 35, mining: 0.50, referral: 0.06, tasks: 1.50 },
+  { tier: 7, name: "Orange Master", price: 60, mining: 0.75, referral: 0.08, tasks: 1.65 },
+  { tier: 8, name: "Orange Champion", price: 100, mining: 1.00, referral: 0.10, tasks: 1.80 },
+  { tier: 9, name: "Orange Legend", price: 180, mining: 1.50, referral: 0.12, tasks: 2.00 },
   { tier: 10, name: "Cyber Lord", price: 300, mining: 2.50, referral: 0.15, tasks: 2.50 },
 ];
 /** Benefits come from the best owned tier (not stacked). */
