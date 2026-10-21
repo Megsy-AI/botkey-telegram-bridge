@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      market_snapshots: {
+        Row: {
+          data: Json
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          data: Json
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          data?: Json
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       nfts: {
         Row: {
           created_at: string
@@ -110,6 +128,9 @@ export type Database = {
           first_name: string | null
           id: number
           language_code: string | null
+          mining_pending: number
+          mining_rate_daily: number
+          mining_settled_at: string | null
           mining_started_at: string | null
           photo_url: string | null
           power_level: number
@@ -117,6 +138,8 @@ export type Database = {
           subscribed_until: string | null
           username: string | null
           wallet_address: string | null
+          wallet_nonce: string | null
+          wallet_verified: boolean
         }
         Insert: {
           balance?: number
@@ -124,6 +147,9 @@ export type Database = {
           first_name?: string | null
           id: number
           language_code?: string | null
+          mining_pending?: number
+          mining_rate_daily?: number
+          mining_settled_at?: string | null
           mining_started_at?: string | null
           photo_url?: string | null
           power_level?: number
@@ -131,6 +157,8 @@ export type Database = {
           subscribed_until?: string | null
           username?: string | null
           wallet_address?: string | null
+          wallet_nonce?: string | null
+          wallet_verified?: boolean
         }
         Update: {
           balance?: number
@@ -138,6 +166,9 @@ export type Database = {
           first_name?: string | null
           id?: number
           language_code?: string | null
+          mining_pending?: number
+          mining_rate_daily?: number
+          mining_settled_at?: string | null
           mining_started_at?: string | null
           photo_url?: string | null
           power_level?: number
@@ -145,6 +176,8 @@ export type Database = {
           subscribed_until?: string | null
           username?: string | null
           wallet_address?: string | null
+          wallet_nonce?: string | null
+          wallet_verified?: boolean
         }
         Relationships: []
       }
@@ -186,7 +219,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      orange_mining_claim: { Args: { p_user_id: number }; Returns: Json }
+      orange_sync_power: {
+        Args: { p_level: number; p_rate: number; p_user_id: number }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
