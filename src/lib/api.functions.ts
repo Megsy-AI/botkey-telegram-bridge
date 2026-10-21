@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import {
   MINING_HOURS, POWER_LEVELS, REFERRAL_BONUS, MIN_WITHDRAW, ORAI_JETTON, GRAM_ADDRESS,
-  RECEIVE_WALLET, PAYOUT_WALLET, WITHDRAW_FEE_GRAM, ADMIN_USERNAMES, NFT_COLLECTION_ADDRESS, NFT_PRICE_GRAM,
+  RECEIVE_WALLET, PAYOUT_WALLET, WITHDRAW_FEE_GRAM, ADMIN_USERNAMES, NFT_COLLECTION_ADDRESS, NFT_PRICE_GRAM, NFT_TIERS, nftBenefits,
   sessionReward, levelForHoldings, dailyOrai, MARKET_MAX_AGE,
 } from "./config";
 
@@ -109,7 +109,8 @@ export const completeTask = createServerFn({ method: "POST" })
     const { error } = await db.from("task_completions").insert({ user_id: user.id, task_id: task.id });
     if (error) throw new Error("Already completed");
     const me = await loadUser(db, user.id);
-    const balance = Number(me.balance) + Number(task.reward);
+    const { data: owned } = await db.from("nfts").select("tier").eq("user_id", user.id);
+    const balance = Number(me.balance) + Number(task.reward) * nftBenefits((owned ?? []).map((n: any) => n.tier)).tasks;
     await db.from("tg_users").update({ balance }).eq("id", user.id);
     const synced = await syncPower(db, user.id);
     return { balance, power_level: synced.power_level };
@@ -209,7 +210,10 @@ async function syncPower(db: any, id: number) {
   const holdings = Number(me.balance) + external;
   const level = levelForHoldings(holdings, market.orai.priceUsd);
   const pro = me.subscribed_until && new Date(me.subscribed_until).getTime() > Date.now();
-  const rate = dailyOrai(level, market.orai.priceUsd) * (pro ? 2 : 1);
+  const { data: owned } = await db.from("nfts").select("tier").eq("user_id", id);
+  const perks = nftBenefits((owned ?? []).map((n: any) => n.tier));
+  await db.from("tg_users").update({ referral_rate: perks.referralRate }).eq("id", id);
+  const rate = dailyOrai(level, market.orai.priceUsd) * (pro ? 2 : 1) * perks.mining;
   const { error } = await db.rpc("orange_sync_power", { p_user_id: id, p_level: level, p_rate: rate });
   if (error) throw new Error(error.message);
   return { ...await loadUser(db, id), market, holdings, syncUnavailable: false };
@@ -313,24 +317,30 @@ export const adminToggleTask = createServerFn({ method: "POST" })
 
 // ============= NFT =============
 
-/** Buys an NFT: verifies the on-chain payment, then mints the next item straight to the buyer's wallet. */
+/** Buys an NFT tier: verifies the GRAM payment to the receive wallet, records it, activates perks, then tries to mint. */
 export const buyNft = createServerFn({ method: "POST" })
-  .inputValidator(auth)
+  .inputValidator((i: Auth & { tier: number }) => ({ ...auth(i), tier: Number(i.tier) }))
   .handler(async ({ data }) => {
-    if (!NFT_COLLECTION_ADDRESS) throw new Error("NFT collection is not available yet");
+    const tier = NFT_TIERS.find(t => t.tier === data.tier);
+    if (!tier) throw new Error("Invalid NFT tier");
     const { user, db } = await ctx(data.initData);
     const me = await loadUser(db, user.id);
     if (!me.wallet_address) throw new Error("Connect your wallet first");
-    const tx = await findPayment(`nft:${user.id}`, NFT_PRICE_GRAM * 1e9);
+    const { data: usedRows } = await db.from("nfts").select("tx_hash");
+    const usedSet = new Set((usedRows ?? []).map((r: any) => r.tx_hash).filter(Boolean));
+    const tx = await findPayment(`nft:${user.id}:${tier.tier}`, Math.round(tier.price * 1e9), 8, usedSet);
     if (!tx) throw new Error("Payment not found yet, try again in a minute");
-    const { data: used } = await db.from("nfts").select("id").eq("tx_hash", tx.hash).maybeSingle();
-    if (used) throw new Error("This payment was already used");
     const { count } = await db.from("nfts").select("id", { count: "exact", head: true });
     const itemIndex = count ?? 0;
-    const { mintNft } = await import("./payout.server");
-    await mintNft(NFT_COLLECTION_ADDRESS, itemIndex, me.wallet_address);
-    await db.from("nfts").insert({ user_id: user.id, item_index: itemIndex, price_gram: NFT_PRICE_GRAM, tx_hash: tx.hash });
-    return { itemIndex };
+    const { error } = await db.from("nfts").insert({ user_id: user.id, item_index: itemIndex, price_gram: tier.price, tx_hash: tx.hash, tier: tier.tier, mint_status: "pending" });
+    if (error) throw new Error("This payment was already used");
+    await syncPower(db, user.id);
+    try {
+      const { mintNft } = await import("./payout.server");
+      await mintNft(NFT_COLLECTION_ADDRESS, itemIndex, me.wallet_address);
+      await db.from("nfts").update({ mint_status: "submitted" }).eq("tx_hash", tx.hash);
+    } catch (e) { console.error("NFT mint deferred:", e); }
+    return { itemIndex, tier: tier.tier };
   });
 
 export const myNfts = createServerFn({ method: "POST" })
