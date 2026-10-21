@@ -3,7 +3,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useTonAddress, useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
-import { toNano } from "@ton/core";
+import { toNano, Address } from "@ton/core";
+import banner from "@/assets/wallet-banner.jpg";
+const sameAddr = (a?: string | null, b?: string | null) => { if (!a || !b) return false; try { return Address.parse(a).equals(Address.parse(b)); } catch { return a === b; } };
 import { useStore } from "@/lib/store";
 import { getMarket, walletBalances, setWallet, requestWithdraw, checkWithdrawal, walletChallenge, proveWallet } from "@/lib/api.functions";
 import { MIN_WITHDRAW, RECEIVE_WALLET, WITHDRAW_FEE_GRAM } from "@/lib/config";
@@ -28,9 +30,9 @@ function WalletPage() {
      // Automatic verification: attempt each proof once, silently.
      if (triedProof.current !== proof.proof.signature) {
        triedProof.current = proof.proof.signature;
-       proveWallet({ data: { initData, address, proof: proof.proof } }).then(patchMe).catch(() => {});
+       proveWallet({ data: { initData, address, proof: proof.proof } }).then((r) => { patchMe({ ...r, wallet_address: r.wallet_address ?? address, wallet_verified: true }); toast.success(t("done")); void refresh(); }).catch((e: any) => toast.error(e.message));
      }
-   } else if (address !== data?.me.wallet_address) {
+   } else if (!sameAddr(address, data?.me.wallet_address)) {
      setWallet({ data: { initData, address } }).then(() => patchMe({ wallet_address: address, wallet_verified: false })).catch(() => {});
    }
  }, [address, demo, initData, wallet]);
@@ -59,15 +61,18 @@ function WalletPage() {
      setAmount(""); setMode(null);
    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
  }
- const linked = !!address && me.wallet_verified && me.wallet_address === address;
+ const linked = !!address && !!me.wallet_verified && sameAddr(me.wallet_address, address);
  const usd = market?.orai.priceUsd ? Number(me.balance) * market.orai.priceUsd : null;
  const assets = [{ s: "ORAI", name: market?.orai.name || "Orange AI", icon: ORAI_ICON, price: market?.orai.priceUsd, balance: chain?.orai }, { s: "GRAM", name: "Gram", icon: GRAM_ICON, price: market?.gram.priceUsd, balance: chain?.gram }];
  return <div className="space-y-5">
-   <div className="rounded-3xl bg-primary p-6 text-center text-primary-foreground">
-     <div className="text-xs font-bold opacity-80">{t("balance")}</div>
-     <div className="mt-3 flex items-center justify-center gap-2 break-all text-4xl font-bold tabular-nums"><CoinIcon src={ORAI_ICON} className="size-8 ring-2 ring-primary-foreground/40" />{fmt(Number(me.balance), 4)}</div>
-     <div className="mt-2 text-sm font-bold opacity-80" dir="ltr">ORAI{usd !== null ? ` · $${fmt(usd, 2)}` : ""}</div>
-     {linked && <div className="mx-auto mt-4 w-fit rounded-full bg-primary-foreground/20 px-3 py-1 text-xs font-bold" dir="ltr">{short(address)}</div>}
+     <div className="relative overflow-hidden rounded-3xl bg-primary text-primary-foreground">
+     <img src={banner} alt="" width={1536} height={768} className="absolute inset-0 h-full w-full object-cover object-right" />
+     <div className="relative flex min-h-44 flex-col justify-center p-5" dir="ltr">
+       <div className="text-xs font-bold opacity-90">{t("balance")}</div>
+       <div className="mt-2 flex items-center gap-2"><CoinIcon src={ORAI_ICON} className="size-7 ring-2 ring-primary-foreground/40" /><span className="text-3xl font-bold tabular-nums">{fmt(Number(me.balance), 2)}</span></div>
+       <div className="mt-1 text-sm font-bold opacity-90">ORAI{usd !== null ? ` · $${fmt(usd, 2)}` : ""}</div>
+       {linked && <div className="mt-3 w-fit rounded-full bg-primary-foreground/25 px-3 py-1 text-xs font-bold">{short(address)}</div>}
+     </div>
    </div>
    {!linked ? <PrimaryButton onClick={connect}>{t("connectWallet")}</PrimaryButton> : <div className="grid grid-cols-2 gap-3"><PrimaryButton className="h-12" onClick={() => { setCoin("ORAI"); setMode("withdraw"); }}>{t("withdraw")}</PrimaryButton><GhostButton className="h-12 font-bold" onClick={() => setMode("deposit")}>{t("deposit")}</GhostButton></div>}
    <div>
