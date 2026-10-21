@@ -1,22 +1,21 @@
-# Orange (ORAI) — خارطة الطريق
+# Orange — task roadmap
 
-## جاهز
-- التطبيق كامل: تعدين 6 ساعات، مهام، إحالات، قوة، محفظة، Pro، Swap
-- بوت @GamaCoinBot: رسالة /start + زر فتح التطبيق — مربوط بالرابط المنشور
-- نشر Lovable: https://botkey-telegram-bridge.lovable.app
-- السحب الأوتوماتيكي: رسوم 0.15 GRAM تُدفع على الشبكة، وبعد التحقق يُرسل ORAI من محفظة التوزيع تلقائيًا (غير مُختبر بمعاملة حقيقية بعد)
-- لوحة أدمن /admin لـ @eIgiza: إحصائيات، سحوبات، إضافة/إيقاف مهام
-- صفحة /nft: شراء NFT بسكّ فوري لمحفظة المشتري — تتفعل بعد ضبط عنوان المجموعة
+## Completed
+- [x] Continuous mining, two-hour accumulation cap and automatic restart on claim; atomic claim and 10% additional referral credit.
+- [x] No ORAI deduction to unlock power; staged USD holding tiers with hourly market snapshots and automatic up/down synchronization when price is available.
+- [x] Wallet ownership proof before external holdings count.
+- [x] Clean home, elevated mining controls, NFT home entry, clean wallet/dialogs and profile instead of Swap.
+- [x] /101 admin entry with server authorization; daily localized in-app notification.
+- [x] Referral character image and prepared native-sharing message; Megsy AI description and draft white paper/roadmap.
+- [x] V5 payout fix, atomic withdrawal reservation and confirmation checks. Real 0.01 ORAI transfer between project wallets confirmed; full user fee/payment flow still not exercised.
+- [x] Nine tests pass; authenticated Arabic mobile pages load without runtime errors or horizontal overflow.
+- [x] Lovable publishing requested.
 
-## قيد التنفيذ / مستني من المستخدم
-- [ ] النشر على Vercel بعد الاختبارات مع الحفاظ على Lovable Cloud والبوت، والتحقق من الرابط.
-- [ ] طلب إضافي: إصلاح السحب واختباره، إعادة زر NFT بشكل مرتب للرئيسية، عمولة إحالة من أرباح المدعوين (النسبة بانتظار تحديد المستخدم)، صورة شخصية قابلة للمشاركة مع رسالة جاهزة.
-- [ ] إلغاء خصم ORAI لفتح القوة: القوة تعتمد على الاحتفاظ فقط، والشراء عبر STON.fi.
-- [ ] طلب 21 أكتوبر: أدمن من /101 فقط، مستويات بالدولار بعائد يومي 20% وتدرج مرحلي، تحديث سعر ساعي وقوة تلقائية حسب الرصيد، تعدين مستمر بسقف ساعتين، إعادة تصميم الرئيسية والمحفظة، ملف شخصي وبريميوم ومعلومات وداعم ووثائق، إشعارات داخل التطبيق، توضيح خطة NFT.
-- [ ] NFT: المستخدم ينشئ المجموعة ويرسل عنوانها + السعر → أضبط NFT_COLLECTION_ADDRESS وNFT_PRICE_GRAM
-- [ ] Vercel: غير مناسب — كل الخلفية (قاعدة البيانات، البوت، مفاتيح المحافظ) على Lovable Cloud؛ نسخة Vercel ستتعطل. التوكن ظهر في الشات → يُنصح بإلغائه من لوحة Vercel
-- [ ] منشورات AI يومية للقناة -1002616088306 — البوت أدمن، لكن لا نشر الآن بطلب المستخدم
-- [ ] توصيل الإيداع لرصيد المستخدم داخل التطبيق
-
-## ملاحظات
-- كلمات محفظة السحب وتوكن Vercel محفوظان في المخزن الآمن (PAYOUT_WALLET_MNEMONIC, VERCEL_TOKEN)
+## Blocked / incomplete
+- [ ] Vercel deployment: stored token rejected with invalidToken; needs a new valid token. Reverse-proxy configuration prepared in temporary staging.
+- [ ] Dollar pricing and prefilled purchase amount: STON.fi currently reports no ORAI liquidity and no price. Quantity copy/open fallback implemented; STON URL amount selection is undocumented.
+- [ ] NFT: owner must supply collection address, price, metadata and compatible mint contract. Current mint must be reviewed against that contract before enabling.
+- [ ] Full user withdrawal flow: requires user wallet signature and fee; only direct real payout was verified. Ambiguous broadcasts stay pending for safe reconciliation.
+- [ ] Automatic deposit crediting: existing payments do not yet automatically credit app balance; needs verified chain ledger reconciliation.
+- [ ] White paper funding/supply/audit/legal content requires owner approval; current pages explicitly marked draft.
+- [ ] Daily channel AI posts intentionally paused by user request.
