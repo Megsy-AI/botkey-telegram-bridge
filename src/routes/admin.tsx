@@ -113,10 +113,8 @@ function AdminPage() {
         <input inputMode="decimal" value={reward} onChange={(e) => setReward(e.target.value.replace(/[^0-9.]/g, ""))} placeholder={t("taskReward")}
           className="mb-3 h-12 w-full rounded-2xl bg-card px-4 outline-none placeholder:text-muted-foreground" />
         <PrimaryButton onClick={addTask} disabled={busy}>{t("save")}</PrimaryButton>
-        </Card>
-        <NftOwnerCard />
-        <Card className="hidden">
       </Card>
+      <NftOwnerCard />
 
       <Card>
         <div className="mb-2 text-lg">{t("tasks")}</div>
