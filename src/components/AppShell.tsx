@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link, Outlet, useLocation, useRouter } from "@tanstack/react-router";
+import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import { House, Gift, Gauge, Wallet, CircleUserRound } from "lucide-react";
-import { Toaster } from "@/components/ui/sonner";
 import { StoreProvider, useStore } from "@/lib/store";
 import { getWebApp } from "@/lib/telegram";
 import logo from "@/assets/orai-logo.png.asset.json";
@@ -72,7 +72,6 @@ export default function AppShell() {
       <StoreProvider>
         <BackButtonSync />
         <Frame />
-        <Toaster position="top-center" />
       </StoreProvider>
     </TonConnectUIProvider>
   );
