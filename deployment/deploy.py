@@ -36,20 +36,20 @@ def req(path, method="GET", body=None, params=""):
 sh("bun run build")
 # 2. serve the cloudflare-worker build locally and extract the clean SPA shell
 sh("rm -rf /tmp/wdist && mkdir -p /tmp/wdist && cp -r dist/server /tmp/wdist/server && cp -r dist/client /tmp/wdist/client")
-subprocess.Popen("cd /tmp/wdist/server && npx wrangler dev --port 4200",
+subprocess.Popen("cd /tmp/wdist/server && npx wrangler dev --port 4211",
                  shell=True, stdout=open("/tmp/wrangler-deploy.log", "w"), stderr=subprocess.STDOUT)
 ok = False
 for _ in range(60):
     time.sleep(1)
     try:
-        with urllib.request.urlopen("http://localhost:4200/", timeout=5) as r:
+        with urllib.request.urlopen("http://localhost:4211/", timeout=5) as r:
             shell = r.read(); ok = True; break
     except Exception:
         pass
 if not ok:
     print("wrangler dev failed; see /tmp/wrangler-deploy.log"); sys.exit(1)
 open(f"{ROOT}/dist/client/index.html", "wb").write(shell)
-subprocess.run("pkill -f 'wrangler dev --port 4200'", shell=True)
+subprocess.run("pkill -f 'wrangler dev --port 4211'", shell=True)
 
 # 3. stage
 sh(f"rm -rf {STAGE} && mkdir -p {STAGE} && cp -r {ROOT}/dist/client/. {STAGE}/ && rm -f {STAGE}/_headers")
