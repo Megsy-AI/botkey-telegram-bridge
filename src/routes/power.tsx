@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 
 export const Route = createFileRoute("/power")({
   ssr: false,
-  validateSearch: (s: Record<string, unknown>) => ({ tab: s.tab === "nft" ? ("nft" as const) : ("power" as const) }),
+  validateSearch: (s: Record<string, unknown>) => ({ tab: s["tab"] === "nft" ? ("nft" as const) : ("power" as const) }),
   head: () => ({ meta: [
     { title: "Orange — Holding power" }, { name: "description", content: "ORAI holding tiers from $0.10 to $10,000, with automatic mining power." }, { property: "og:title", content: "Orange Holding Power" }, { property: "og:description", content: "ORAI holding tiers from $0.10 to $10,000, with automatic mining power." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }
   ]}),
