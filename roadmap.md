@@ -1,5 +1,10 @@
 # Orange — task roadmap
 
+## Current requests
+- [x] Republish the current app through the Vercel front door; production READY and browser HTTP 200 with no page errors. Lovable badge remains visible due to plan restriction.
+- [x] Audit actual language coverage: EN/AR main catalogs and profile content, 11 partial website languages; /start localized in 7 languages. Bot reminders not implemented.
+- [ ] Continue NFT setup discussion; obtain collection details needed for a safe mint review.
+
 ## Completed
 - [x] Continuous mining, two-hour accumulation cap and automatic restart on claim; atomic claim and 10% additional referral credit.
 - [x] No ORAI deduction to unlock power; staged USD holding tiers with hourly market snapshots and automatic up/down synchronization when price is available.
@@ -19,6 +24,7 @@
 - [ ] Automatic deposit crediting: existing payments do not yet automatically credit app balance; needs verified chain ledger reconciliation.
 - [ ] White paper funding/supply/audit/legal content requires owner approval; current pages explicitly marked draft.
 - [ ] Daily channel AI posts intentionally paused by user request.
+- [ ] Telegram bot daily reminders requested; delivery scheduling not implemented (in-app bell removed).
 
 ## Completed (2026-10-21 UI overhaul)
 - Home: removed Orange text/username/level row; big user photo with circular mining progress ring.
