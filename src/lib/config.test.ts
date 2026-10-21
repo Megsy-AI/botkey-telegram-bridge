@@ -26,3 +26,6 @@ describe("NFT tiers", () => {
 describe("NFT prices", () => {
   it("start at 2 GRAM", () => { expect(NFT_TIERS[0]!.price).toBe(2); });
 });
+describe("daily yield", () => {
+  it("$50 holding earns $25 per day", () => { expect(POWER_LEVELS.find(l => l.price === 50)!.perDay).toBe(25); });
+});
