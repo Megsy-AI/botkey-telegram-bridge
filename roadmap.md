@@ -1,6 +1,10 @@
 # Orange — task roadmap
 
 ## Current requests
+- [ ] Refresh bot token and register webhook/menu for the new bot.
+- [ ] Dedicated referral artwork; remove wallet/tasks titles; vertical rectangular NFT showcase and per-tier increase-power buttons.
+- [ ] Use owner-provided https://getgems.io/orangeai above the NFT list; provide receive-wallet royalty address.
+- [ ] Review GitHub→Vercel standalone hosting and badge removal; preserve private Cloud access.
 - [x] Republish the current app through the Vercel front door; production READY and browser HTTP 200 with no page errors. Lovable badge remains visible due to plan restriction.
 - [x] Audit actual language coverage: EN/AR main catalogs and profile content, 11 partial website languages; /start localized in 7 languages. Bot reminders not implemented.
 - [x] Explain proposed NFT purchase, mint, ownership and additional-mining benefits; no bonus rates approved yet.
