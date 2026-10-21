@@ -396,3 +396,22 @@ export const checkWithdrawal = createServerFn({ method: "POST" }).inputValidator
   await payoutPreflight(data.amount);
   return { ok: true };
 });
+
+/** Admin: retries minting every paid-but-unminted NFT. */
+export const adminMintPending = createServerFn({ method: "POST" })
+  .inputValidator((i: Auth) => auth(i))
+  .handler(async ({ data }) => {
+    const { db } = await adminCtx(data.initData);
+    const { data: rows } = await db.from("nfts").select("id,item_index,user_id").eq("mint_status", "pending").order("item_index");
+    const { mintNft } = await import("./payout.server");
+    let minted = 0;
+    for (const n of rows ?? []) {
+      const { data: u } = await db.from("tg_users").select("wallet_address").eq("id", n.user_id).single();
+      if (!u?.wallet_address) continue;
+      await mintNft(NFT_COLLECTION_ADDRESS, n.item_index ?? 0, u.wallet_address);
+      await db.from("nfts").update({ mint_status: "submitted" }).eq("id", n.id);
+      minted++;
+      await new Promise(r => setTimeout(r, 8000));
+    }
+    return { minted, pending: (rows?.length ?? 0) - minted };
+  });
