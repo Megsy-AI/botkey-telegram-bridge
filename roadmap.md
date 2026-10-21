@@ -34,3 +34,7 @@
 - Tasks: completed tasks hidden; real membership verification via bot getChatMember for t.me channel/group links.
 - Profile: sections are now full separate pages (/guide /about /premium /supporter /whitepaper /roadmap) with expanded bilingual content; premium subscribe moved to /premium.
 - Nav: new icons (House, Gift, Gauge, Wallet, CircleUserRound); in-app notification bell removed (bot notifications only).
+
+## NFT (2026-10-21)
+- [x] 10 tiers (0.5→300 GRAM) with mining/referral/task boosts, new characters, Getgems collection linked, new /start image
+- [ ] Automatic mint into buyer wallet — blocked: collection owner is the receive wallet; ownership must move to the payout wallet (purchases are recorded as pending mint until then)
