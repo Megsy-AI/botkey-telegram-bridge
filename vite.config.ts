@@ -14,6 +14,7 @@ export default defineConfig({
         // Bundle the real `buffer` package in the client build; otherwise Vite
         // swaps it for an empty browser-external stub and @ton/core crashes.
         buffer: fileURLToPath(new URL("./node_modules/buffer/index.js", import.meta.url)),
+        "node:buffer": fileURLToPath(new URL("./node_modules/buffer/index.js", import.meta.url)),
       },
     },
   },
