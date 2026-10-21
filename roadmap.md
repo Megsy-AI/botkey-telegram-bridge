@@ -7,6 +7,7 @@
 - [x] Review GitHub→Vercel standalone hosting: current Vercel is a catch-all proxy; full standalone app requires a secure replacement for inaccessible managed service-role access. GitHub API connector has no accessible connection; Git sync must be managed through project Git settings.
 - [ ] Badge removal / independent GitHub→Vercel deployment blocked: badge tool requires Pro; independent hosting needs a separately approved secure backend migration, not a proxy or exposed credentials.
 - [x] Republish the current app through the Vercel front door; production READY and browser HTTP 200 with no page errors. Lovable badge remains visible due to plan restriction.
+- [x] New /start banner image (solid orange background, no circles) and full Vercel redeploy with orange nav tabs; verified live at orange-telegram.vercel.app with no page errors.
 - [x] Audit actual language coverage: EN/AR main catalogs and profile content, 11 partial website languages; /start localized in 7 languages. Bot reminders not implemented.
 - [x] Explain proposed NFT purchase, mint, ownership and additional-mining benefits; no bonus rates approved yet.
 - [ ] NFT activation awaits owner-signed collection ownership transfer and verified contract mint/ownership flow; native TON is labeled GRAM, collection and artwork are configured.
