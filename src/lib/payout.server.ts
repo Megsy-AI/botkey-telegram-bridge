@@ -14,9 +14,11 @@ async function payoutWallet() {
 }
 
 async function oraiJettonWallet(owner: string) {
-  const r = await fetch(
-    `https://toncenter.com/api/v3/jetton/wallets?owner_address=${encodeURIComponent(owner)}&jetton_address=${ORAI_JETTON}&limit=1`,
-  );
+  let r = await fetch(`https://toncenter.com/api/v3/jetton/wallets?owner_address=${encodeURIComponent(owner)}&jetton_address=${ORAI_JETTON}&limit=1`);
+  for (let attempt = 0; r.status === 429 && attempt < 3; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, 1500 * (attempt + 1)));
+    r = await fetch(`https://toncenter.com/api/v3/jetton/wallets?owner_address=${encodeURIComponent(owner)}&jetton_address=${ORAI_JETTON}&limit=1`);
+  }
   if (!r.ok) throw new Error(`Blockchain lookup failed [${r.status}]`);
   const j = (await r.json()) as { jetton_wallets?: { address: string }[] };
   const addr = j.jetton_wallets?.[0]?.address;

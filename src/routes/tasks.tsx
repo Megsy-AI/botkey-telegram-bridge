@@ -3,9 +3,11 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
 import { completeTask } from "@/lib/api.functions";
-import { REFERRAL_BONUS } from "@/lib/config";
+import { REFERRAL_BONUS, REFERRAL_COMMISSION } from "@/lib/config";
 import { openLink, haptic } from "@/lib/telegram";
 import { fmt } from "@/lib/ton";
+import mascot from "@/assets/orai-mascot.jpg.asset.json";
+import { shareReferral } from "@/lib/referral-share";
 import { Card, CoinIcon, GhostButton, ORAI_ICON, PrimaryButton, Title } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/tasks")({
@@ -26,7 +28,7 @@ export const Route = createFileRoute("/tasks")({
 const BOT_USERNAME = "GamaCoinBot";
 
 function Tasks() {
-  const { data, t, initData, demo, setData } = useStore();
+  const { data, t, x, initData, demo, setData, lang } = useStore();
   const [tab, setTab] = useState<"tasks" | "refs">("tasks");
   const [opened, setOpened] = useState<Record<string, boolean>>({});
   const me = data!.me;
@@ -41,7 +43,7 @@ function Tasks() {
     if (demo) { toast(t("openInTelegram")); return; }
     try {
       const r = await completeTask({ data: { initData, taskId: task.id } });
-      setData((d) => d && { ...d, me: { ...d.me, balance: r.balance }, done: [...d.done, task.id] });
+      setData((d) => d && { ...d, me: { ...d.me, balance: r.balance, power_level: r.power_level }, done: [...d.done, task.id] });
       haptic("success");
     } catch (e: any) { toast.error(e.message); }
   }
@@ -78,12 +80,19 @@ function Tasks() {
         </div>
       ) : (
         <div className="space-y-3">
+          <img src={mascot.url} alt="Orange" className="mx-auto aspect-square w-48 rounded-2xl object-cover" />
+          <div className="py-4 text-center">
+            <div className="text-2xl">{t("inviteFriends")}</div>
+            <div className="mt-2 text-sm text-muted-foreground">{lang === "ar" ? "اربح 10% إضافية من مكافآت تعدين أصدقائك" : "Earn an additional 10% of friends' mining rewards"}</div>
+            <div className="mt-3 text-2xl text-primary">{fmt(Number(me.referral_earned ?? 0), 4)} ORAI</div>
+          </div>
           <Card>
             <div className="text-lg">{t("inviteFriends")}</div>
             <div className="mt-1 text-sm text-muted-foreground">{t("inviteText")} · +{REFERRAL_BONUS} ORAI</div>
-            <PrimaryButton className="mt-4" onClick={() => { navigator.clipboard.writeText(link); toast(t("copied")); }}>
-              {t("copyLink")}
+            <PrimaryButton className="mt-4" onClick={() => shareReferral(mascot.url, link, lang).catch(() => toast.error(t("pending")))}>
+              {lang === "ar" ? "مشاركة الدعوة والصورة" : "Share invitation & image"}
             </PrimaryButton>
+            <GhostButton className="mt-2 w-full" onClick={() => { navigator.clipboard.writeText(link); toast(t("copied")); }}>{t("copyLink")}</GhostButton>
           </Card>
           <Card>
             <div className="mb-2 text-sm text-muted-foreground">{t("friends")} · {data!.referrals.length}</div>
