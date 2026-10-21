@@ -17,7 +17,7 @@ export const NFT_PRICE_GRAM = 1;
 export const SUPPORTER_URL = "https://megsyai.com";
 export const MARKET_MAX_AGE = 3600_000;
 const thresholds: number[] = [];
-for (const [start, end, step] of [[10, 100, 5], [125, 1000, 25], [1250, 10000, 250], [12500, 100000, 2500], [125000, 1000000, 25000]]) {
+for (const [start, end, step] of ([[10, 100, 5], [125, 1000, 25], [1250, 10000, 250], [12500, 100000, 2500], [125000, 1000000, 25000]] as [number, number, number][])) {
   for (let cents = start; cents <= end; cents += step) thresholds.push(cents / 100);
 }
 export const POWER_LEVELS = [{ level: 0, price: 0, perDay: 0 }, ...thresholds.map((price, index) => ({ level: index + 1, price, perDay: price * DAILY_YIELD }))];

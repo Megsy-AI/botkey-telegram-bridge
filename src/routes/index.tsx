@@ -40,7 +40,8 @@ function Home() {
     <div className="mt-2 flex max-w-full items-center justify-center gap-2 break-all text-4xl tabular-nums"><CoinIcon src={ORAI_ICON} className="size-8" />{fmt(Number(me.balance) + mined, 4)}</div>
     <span className="mt-1 text-sm text-muted-foreground">ORAI</span>
     <Link to="/power" className="mt-6 flex w-full items-center justify-between border-y border-input py-4 text-start"><div><div className="text-xs text-muted-foreground">{t("level")}</div><div className="mt-1 text-2xl">{me.power_level}</div></div><div className="text-end"><div className="text-xs text-muted-foreground">{x("dailyReward")}</div><div className="mt-1 text-lg text-primary">{me.power_level > 0 ? `$${fmt(POWER_LEVELS[me.power_level]?.perDay ?? 0, 2)}` : `${fmt(Number(me.mining_rate_daily ?? 0.1), 4)} ORAI`}</div></div></Link>
-    <div className="mt-6 w-full">
+    <Link to="/nft" className="mt-4 flex w-full items-center justify-between rounded-2xl bg-card px-4 py-3 text-sm"><span className="flex items-center gap-2"><CoinIcon src={ORAI_ICON} className="size-6" />Orange NFT</span><span className="text-muted-foreground">→</span></Link>
+    <div className="mt-5 w-full">
       {started !== null && <><div className="flex justify-between text-sm"><span>{done ? x("capNotice") : t("mining")}</span><span className="tabular-nums">{done ? "02:00:00" : clock}</span></div><progress aria-label={t("mining")} max={100} value={elapsed / total * 100} className="mt-3 h-1.5 w-full accent-primary" /></>}
       {started === null || done ? <PrimaryButton className="mt-4" onClick={act} disabled={busy}>{done ? `${t("claim")} +${fmt(mined, 4)} ORAI` : t("startMining")}</PrimaryButton> : <div className="mt-4 rounded-2xl bg-accent py-4 text-primary">+{fmt(mined, 4)} ORAI</div>}
     </div>

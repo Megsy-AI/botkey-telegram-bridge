@@ -83,7 +83,7 @@ export const claimMining = createServerFn({ method: "POST" })
     const { data: result, error } = await db.rpc("orange_mining_claim", { p_user_id: user.id });
     if (error) throw new Error(error.message);
     await syncPower(db, user.id);
-    return { ...result, ...await loadUser(db, user.id) };
+    return { ...await loadUser(db, user.id) };
   });
 
 export const completeTask = createServerFn({ method: "POST" })
@@ -183,7 +183,6 @@ async function marketSnapshot(db: any, force = false) {
     return { symbol: asset.symbol ?? "", name: asset.display_name ?? "", image: asset.image_url ?? "", priceUsd: Number(asset.dex_price_usd || asset.third_party_price_usd || 0) };
   };
   try {
-    await ctx(data.initData);
     const [orai, gram] = await Promise.all([get(ORAI_JETTON), get(GRAM_ADDRESS)]);
     if (!Number.isFinite(orai.priceUsd) || orai.priceUsd <= 0) throw new Error("ORAI price unavailable");
     const result = { orai: { ...orai, symbol: "ORAI", name: orai.name || "Orange AI" }, gram: { ...gram, symbol: "GRAM", name: "Gram" }, updatedAt: new Date().toISOString(), stale: false };

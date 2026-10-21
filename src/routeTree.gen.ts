@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as NftRouteImport } from './routes/nft'
 import { Route as PowerRouteImport } from './routes/power'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SwapRouteImport } from './routes/swap'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as WalletRouteImport } from './routes/wallet'
@@ -36,6 +37,11 @@ const NftRoute = NftRouteImport.update({
 const PowerRoute = PowerRouteImport.update({
   id: '/power',
   path: '/power',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SwapRoute = SwapRouteImport.update({
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/nft': typeof NftRoute
   '/power': typeof PowerRoute
+  '/profile': typeof ProfileRoute
   '/swap': typeof SwapRoute
   '/tasks': typeof TasksRoute
   '/wallet': typeof WalletRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/nft': typeof NftRoute
   '/power': typeof PowerRoute
+  '/profile': typeof ProfileRoute
   '/swap': typeof SwapRoute
   '/tasks': typeof TasksRoute
   '/wallet': typeof WalletRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/nft': typeof NftRoute
   '/power': typeof PowerRoute
+  '/profile': typeof ProfileRoute
   '/swap': typeof SwapRoute
   '/tasks': typeof TasksRoute
   '/wallet': typeof WalletRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/nft'
     | '/power'
+    | '/profile'
     | '/swap'
     | '/tasks'
     | '/wallet'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/nft'
     | '/power'
+    | '/profile'
     | '/swap'
     | '/tasks'
     | '/wallet'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/nft'
     | '/power'
+    | '/profile'
     | '/swap'
     | '/tasks'
     | '/wallet'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   NftRoute: typeof NftRoute
   PowerRoute: typeof PowerRoute
+  ProfileRoute: typeof ProfileRoute
   SwapRoute: typeof SwapRoute
   TasksRoute: typeof TasksRoute
   WalletRoute: typeof WalletRoute
@@ -163,6 +176,13 @@ declare module '@tanstack/react-router' {
       path: '/power'
       fullPath: '/power'
       preLoaderRoute: typeof PowerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/swap': {
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   NftRoute: NftRoute,
   PowerRoute: PowerRoute,
+  ProfileRoute: ProfileRoute,
   SwapRoute: SwapRoute,
   TasksRoute: TasksRoute,
   WalletRoute: WalletRoute,

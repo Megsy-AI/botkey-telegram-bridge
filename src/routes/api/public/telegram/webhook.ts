@@ -2,13 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { pickLang } from "@/lib/i18n";
 
 const START: Record<string, { text: string; btn: string }> & { en: { text: string; btn: string } } = {
-  en: { text: "<b>Welcome to ORAI</b>\n\n<b>Mine ORAI every 6 hours, complete tasks and grow your mining power.</b>", btn: "Open app" },
-  ar: { text: "<b>أهلاً بك في ORAI</b>\n\n<b>عدّن ORAI كل 6 ساعات، أكمل المهام وزوّد قوة التعدين.</b>", btn: "افتح التطبيق" },
-  ru: { text: "<b>Добро пожаловать в ORAI</b>\n\n<b>Майни ORAI каждые 6 часов, выполняй задания и увеличивай мощность.</b>", btn: "Открыть" },
-  es: { text: "<b>Bienvenido a ORAI</b>\n\n<b>Mina ORAI cada 6 horas, completa tareas y aumenta tu poder.</b>", btn: "Abrir app" },
-  fr: { text: "<b>Bienvenue sur ORAI</b>\n\n<b>Minez ORAI toutes les 6 heures et augmentez votre puissance.</b>", btn: "Ouvrir" },
-  tr: { text: "<b>ORAI'ye hoş geldin</b>\n\n<b>Her 6 saatte ORAI kaz, görevleri tamamla ve gücünü artır.</b>", btn: "Uygulamayı aç" },
-  fa: { text: "<b>به ORAI خوش آمدید</b>\n\n<b>هر ۶ ساعت ORAI استخراج کنید و قدرت خود را افزایش دهید.</b>", btn: "باز کردن" },
+  en: { text: "<b>Welcome to ORAI</b>\n\n<b>Mine ORAI every 2 hours, complete tasks and grow your mining power.</b>", btn: "Open app" },
+  ar: { text: "<b>أهلاً بك في ORAI</b>\n\n<b>عدّن ORAI كل ساعتين، أكمل المهام وزوّد قوة التعدين.</b>", btn: "افتح التطبيق" },
+  ru: { text: "<b>Добро пожаловать в ORAI</b>\n\n<b>Майни ORAI каждые 2 часа, выполняй задания и увеличивай мощность.</b>", btn: "Открыть" },
+  es: { text: "<b>Bienvenido a ORAI</b>\n\n<b>Mina ORAI cada 2 horas, completa tareas y aumenta tu poder.</b>", btn: "Abrir app" },
+  fr: { text: "<b>Bienvenue sur ORAI</b>\n\n<b>Minez ORAI toutes les 2 heures et augmentez votre puissance.</b>", btn: "Ouvrir" },
+  tr: { text: "<b>ORAI'ye hoş geldin</b>\n\n<b>Her 2 saatte ORAI kaz, görevleri tamamla ve gücünü artır.</b>", btn: "Uygulamayı aç" },
+  fa: { text: "<b>به ORAI خوش آمدید</b>\n\n<b>هر ۲ ساعت ORAI استخراج کنید و قدرت خود را افزایش دهید.</b>", btn: "باز کردن" },
 };
 
 async function sha256b64url(s: string) {
@@ -28,7 +28,16 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
         }
         const update = (await request.json()) as any;
         const msg = update.message;
-        if (!msg?.text?.startsWith("/start")) return Response.json({ ok: true });
+        const command = msg?.text?.split(/\s/)[0]?.split("@")[0];
+        if (command === "/101") {
+          const { isAdminUsername } = await import("@/lib/config");
+          if (msg.chat?.type !== "private" || !isAdminUsername(msg.from?.username)) return Response.json({ ok: true });
+          const url = process.env['APP_URL'] || new URL(request.url).origin;
+          const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: msg.chat.id, text: "<b>Orange Admin</b>", parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "Admin", web_app: { url: `${url}/admin` } }]] } }) });
+          if (!response.ok) console.error("Admin message failed", response.status);
+          return Response.json({ ok: true });
+        }
+        if (command !== "/start") return Response.json({ ok: true });
 
         const lang = pickLang(msg.from?.language_code);
         const s = START[lang as string] ?? START.en;
