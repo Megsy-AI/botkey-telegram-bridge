@@ -6,9 +6,9 @@ import { completeTask } from "@/lib/api.functions";
 import { REFERRAL_BONUS } from "@/lib/config";
 import { openLink, haptic } from "@/lib/telegram";
 import { fmt } from "@/lib/ton";
-import mascot from "@/assets/orai-mascot.jpg.asset.json";
+import invitation from "@/assets/referral-invitation.jpg";
 import { shareReferral } from "@/lib/referral-share";
-import { Card, CoinIcon, GhostButton, ORAI_ICON, PrimaryButton, Title } from "@/components/ui-kit";
+import { Card, CoinIcon, GhostButton, ORAI_ICON, PrimaryButton } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/tasks")({
   ssr: false,
@@ -25,15 +25,16 @@ export const Route = createFileRoute("/tasks")({
   component: Tasks,
 });
 
-const BOT_USERNAME = "GamaCoinBot";
+const BOT_USERNAME = "sramaibot";
 
 function Tasks() {
   const { data, t, x, initData, demo, setData, lang } = useStore();
   const [tab, setTab] = useState<"tasks" | "refs">("tasks");
   const [opened, setOpened] = useState<Record<string, boolean>>({});
-  const me = data!.me;
+  if (!data) return null;
+  const me = data.me;
   const link = `https://t.me/${BOT_USERNAME}?start=ref_${me.id}`;
-  const pending = data!.tasks.filter((task: any) => !data!.done.includes(task.id));
+  const pending = data.tasks.filter((task: any) => !data.done.includes(task.id));
 
   async function onTask(task: any) {
     if (!opened[task.id]) {
@@ -53,13 +54,12 @@ function Tasks() {
 
   return (
     <div>
-      <Title>{t("tasks")}</Title>
       <div className="glass mb-4 grid grid-cols-2 rounded-2xl p-1">
         {(["tasks", "refs"] as const).map((k) => (
-          <button key={k} onClick={() => setTab(k)}
+          <GhostButton key={k} onClick={() => setTab(k)}
             className={`h-10 rounded-xl text-sm transition ${tab === k ? "bg-card text-foreground shadow" : "text-muted-foreground"}`}>
             {k === "tasks" ? t("tasksTab") : t("referralsTab")}
-          </button>
+          </GhostButton>
         ))}
       </div>
 
@@ -81,7 +81,7 @@ function Tasks() {
         </div>
       ) : (
         <div className="space-y-3">
-          <img src={mascot.url} alt="Orange" className="mx-auto aspect-square w-48 rounded-2xl object-cover" />
+          <img src={invitation} alt={t("inviteFriends")} className="aspect-[3/2] w-full rounded-lg object-cover" />
           <div className="py-4 text-center">
             <div className="text-2xl">{t("inviteFriends")}</div>
             <div className="mt-2 text-sm text-muted-foreground">{lang === "ar" ? "اربح 10% إضافية من مكافآت تعدين أصدقائك" : "Earn an additional 10% of friends' mining rewards"}</div>
@@ -90,14 +90,14 @@ function Tasks() {
           <Card>
             <div className="text-lg">{t("inviteFriends")}</div>
             <div className="mt-1 text-sm text-muted-foreground">{t("inviteText")} · +{REFERRAL_BONUS} ORAI</div>
-            <PrimaryButton className="mt-4" onClick={() => shareReferral(mascot.url, link, lang).catch(() => toast.error(t("pending")))}>
+            <PrimaryButton className="mt-4" onClick={() => shareReferral(invitation, link, lang).catch(() => toast.error(t("pending")))}>
               {lang === "ar" ? "مشاركة الدعوة والصورة" : "Share invitation & image"}
             </PrimaryButton>
             <GhostButton className="mt-2 w-full" onClick={() => { navigator.clipboard.writeText(link); toast(t("copied")); }}>{t("copyLink")}</GhostButton>
           </Card>
           <Card>
-            <div className="mb-2 text-sm text-muted-foreground">{t("friends")} · {data!.referrals.length}</div>
-            {data!.referrals.map((r: any) => (
+            <div className="mb-2 text-sm text-muted-foreground">{t("friends")} · {data.referrals.length}</div>
+            {data.referrals.map((r: any) => (
               <div key={r.id} className="border-t border-muted py-2 first:border-0">{r.first_name || r.username}</div>
             ))}
           </Card>
