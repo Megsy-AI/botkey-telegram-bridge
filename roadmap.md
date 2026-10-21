@@ -3,7 +3,8 @@
 ## Current requests
 - [x] Republish the current app through the Vercel front door; production READY and browser HTTP 200 with no page errors. Lovable badge remains visible due to plan restriction.
 - [x] Audit actual language coverage: EN/AR main catalogs and profile content, 11 partial website languages; /start localized in 7 languages. Bot reminders not implemented.
-- [ ] Continue NFT setup discussion; obtain collection details needed for a safe mint review.
+- [x] Explain proposed NFT purchase, mint, ownership and additional-mining benefits; no bonus rates approved yet.
+- [ ] NFT activation awaits collection address/contract, GRAM jetton address, artwork, price and approved benefit rules; implement safe orders and confirmed mint before sale.
 
 ## Completed
 - [x] Continuous mining, two-hour accumulation cap and automatic restart on claim; atomic claim and 10% additional referral credit.
