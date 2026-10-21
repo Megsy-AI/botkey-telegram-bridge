@@ -3,7 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
 import { completeTask } from "@/lib/api.functions";
-import { REFERRAL_BONUS, REFERRAL_COMMISSION } from "@/lib/config";
+import { REFERRAL_BONUS } from "@/lib/config";
 import { openLink, haptic } from "@/lib/telegram";
 import { fmt } from "@/lib/ton";
 import mascot from "@/assets/orai-mascot.jpg.asset.json";
@@ -33,6 +33,7 @@ function Tasks() {
   const [opened, setOpened] = useState<Record<string, boolean>>({});
   const me = data!.me;
   const link = `https://t.me/${BOT_USERNAME}?start=ref_${me.id}`;
+  const pending = data!.tasks.filter((task: any) => !data!.done.includes(task.id));
 
   async function onTask(task: any) {
     if (!opened[task.id]) {
@@ -45,7 +46,9 @@ function Tasks() {
       const r = await completeTask({ data: { initData, taskId: task.id } });
       setData((d) => d && { ...d, me: { ...d.me, balance: r.balance, power_level: r.power_level }, done: [...d.done, task.id] });
       haptic("success");
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      toast.error(e?.message === "TASK_NOT_VERIFIED" ? x("taskNotVerified") : e.message);
+    }
   }
 
   return (
@@ -62,21 +65,19 @@ function Tasks() {
 
       {tab === "tasks" ? (
         <div className="space-y-3">
-          {data!.tasks.map((task: any) => {
-            const isDone = data!.done.includes(task.id);
-            return (
-              <Card key={task.id} className="flex items-center gap-3">
-                <CoinIcon src={task.image_url || ORAI_ICON} className="size-12" />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate">{task.title}</div>
-                  <div className="text-sm text-primary">+{fmt(task.reward)} ORAI</div>
-                </div>
-                <GhostButton disabled={isDone} onClick={() => onTask(task)} className="h-10">
-                  {isDone ? t("done") : opened[task.id] ? t("claim") : t("start")}
-                </GhostButton>
-              </Card>
-            );
-          })}
+          {pending.length === 0 && <div className="py-10 text-center text-sm text-muted-foreground">{x("allDone")}</div>}
+          {pending.map((task: any) => (
+            <Card key={task.id} className="flex items-center gap-3">
+              <CoinIcon src={task.image_url || ORAI_ICON} className="size-12" />
+              <div className="min-w-0 flex-1">
+                <div className="truncate">{task.title}</div>
+                <div className="text-sm text-primary">+{fmt(task.reward)} ORAI</div>
+              </div>
+              <GhostButton onClick={() => onTask(task)} className="h-10">
+                {opened[task.id] ? t("claim") : t("start")}
+              </GhostButton>
+            </Card>
+          ))}
         </div>
       ) : (
         <div className="space-y-3">

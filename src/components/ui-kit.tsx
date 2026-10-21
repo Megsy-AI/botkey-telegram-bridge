@@ -30,3 +30,18 @@ export function Title({ children }: { children: ReactNode }) {
 export function CoinIcon({ src, className = "size-10" }: { src: string; className?: string }) {
   return <img src={src} alt="" className={`${className} shrink-0 rounded-full`} />;
 }
+
+export function InfoPage({ title, sections, children }: { title: string; sections: { h: string; p: string }[]; children?: ReactNode }) {
+  return (
+    <div className="space-y-8 py-2">
+      <h1 className="text-2xl">{title}</h1>
+      {sections.map((s) => (
+        <section key={s.h}>
+          <h2 className="mb-2 text-lg text-primary">{s.h}</h2>
+          <p className="leading-8 text-muted-foreground">{s.p}</p>
+        </section>
+      ))}
+      {children}
+    </div>
+  );
+}

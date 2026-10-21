@@ -10,13 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as GuideRouteImport } from './routes/guide'
 import { Route as NftRouteImport } from './routes/nft'
 import { Route as PowerRouteImport } from './routes/power'
+import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as RoadmapRouteImport } from './routes/roadmap'
+import { Route as SupporterRouteImport } from './routes/supporter'
 import { Route as SwapRouteImport } from './routes/swap'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as WhitepaperRouteImport } from './routes/whitepaper'
 import { Route as ApiPublicJobsMarketRouteImport } from './routes/api/public/jobs/market'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 
@@ -25,9 +31,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuideRoute = GuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NftRoute = NftRouteImport.update({
@@ -40,9 +56,24 @@ const PowerRoute = PowerRouteImport.update({
   path: '/power',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PremiumRoute = PremiumRouteImport.update({
+  id: '/premium',
+  path: '/premium',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoadmapRoute = RoadmapRouteImport.update({
+  id: '/roadmap',
+  path: '/roadmap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupporterRoute = SupporterRouteImport.update({
+  id: '/supporter',
+  path: '/supporter',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SwapRoute = SwapRouteImport.update({
@@ -60,6 +91,11 @@ const WalletRoute = WalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WhitepaperRoute = WhitepaperRouteImport.update({
+  id: '/whitepaper',
+  path: '/whitepaper',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicJobsMarketRoute = ApiPublicJobsMarketRouteImport.update({
   id: '/api/public/jobs/market',
   path: '/api/public/jobs/market',
@@ -74,38 +110,56 @@ const ApiPublicTelegramWebhookRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/guide': typeof GuideRoute
   '/nft': typeof NftRoute
   '/power': typeof PowerRoute
+  '/premium': typeof PremiumRoute
   '/profile': typeof ProfileRoute
+  '/roadmap': typeof RoadmapRoute
+  '/supporter': typeof SupporterRoute
   '/swap': typeof SwapRoute
   '/tasks': typeof TasksRoute
   '/wallet': typeof WalletRoute
+  '/whitepaper': typeof WhitepaperRoute
   '/api/public/jobs/market': typeof ApiPublicJobsMarketRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/guide': typeof GuideRoute
   '/nft': typeof NftRoute
   '/power': typeof PowerRoute
+  '/premium': typeof PremiumRoute
   '/profile': typeof ProfileRoute
+  '/roadmap': typeof RoadmapRoute
+  '/supporter': typeof SupporterRoute
   '/swap': typeof SwapRoute
   '/tasks': typeof TasksRoute
   '/wallet': typeof WalletRoute
+  '/whitepaper': typeof WhitepaperRoute
   '/api/public/jobs/market': typeof ApiPublicJobsMarketRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/guide': typeof GuideRoute
   '/nft': typeof NftRoute
   '/power': typeof PowerRoute
+  '/premium': typeof PremiumRoute
   '/profile': typeof ProfileRoute
+  '/roadmap': typeof RoadmapRoute
+  '/supporter': typeof SupporterRoute
   '/swap': typeof SwapRoute
   '/tasks': typeof TasksRoute
   '/wallet': typeof WalletRoute
+  '/whitepaper': typeof WhitepaperRoute
   '/api/public/jobs/market': typeof ApiPublicJobsMarketRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
@@ -113,50 +167,74 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/admin'
+    | '/guide'
     | '/nft'
     | '/power'
+    | '/premium'
     | '/profile'
+    | '/roadmap'
+    | '/supporter'
     | '/swap'
     | '/tasks'
     | '/wallet'
+    | '/whitepaper'
     | '/api/public/jobs/market'
     | '/api/public/telegram/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/admin'
+    | '/guide'
     | '/nft'
     | '/power'
+    | '/premium'
     | '/profile'
+    | '/roadmap'
+    | '/supporter'
     | '/swap'
     | '/tasks'
     | '/wallet'
+    | '/whitepaper'
     | '/api/public/jobs/market'
     | '/api/public/telegram/webhook'
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/admin'
+    | '/guide'
     | '/nft'
     | '/power'
+    | '/premium'
     | '/profile'
+    | '/roadmap'
+    | '/supporter'
     | '/swap'
     | '/tasks'
     | '/wallet'
+    | '/whitepaper'
     | '/api/public/jobs/market'
     | '/api/public/telegram/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
+  GuideRoute: typeof GuideRoute
   NftRoute: typeof NftRoute
   PowerRoute: typeof PowerRoute
+  PremiumRoute: typeof PremiumRoute
   ProfileRoute: typeof ProfileRoute
+  RoadmapRoute: typeof RoadmapRoute
+  SupporterRoute: typeof SupporterRoute
   SwapRoute: typeof SwapRoute
   TasksRoute: typeof TasksRoute
   WalletRoute: typeof WalletRoute
+  WhitepaperRoute: typeof WhitepaperRoute
   ApiPublicJobsMarketRoute: typeof ApiPublicJobsMarketRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
@@ -170,11 +248,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/nft': {
@@ -191,11 +283,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PowerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/premium': {
+      id: '/premium'
+      path: '/premium'
+      fullPath: '/premium'
+      preLoaderRoute: typeof PremiumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roadmap': {
+      id: '/roadmap'
+      path: '/roadmap'
+      fullPath: '/roadmap'
+      preLoaderRoute: typeof RoadmapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/supporter': {
+      id: '/supporter'
+      path: '/supporter'
+      fullPath: '/supporter'
+      preLoaderRoute: typeof SupporterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/swap': {
@@ -219,6 +332,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WalletRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/whitepaper': {
+      id: '/whitepaper'
+      path: '/whitepaper'
+      fullPath: '/whitepaper'
+      preLoaderRoute: typeof WhitepaperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/jobs/market': {
       id: '/api/public/jobs/market'
       path: '/api/public/jobs/market'
@@ -238,13 +358,19 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
+  GuideRoute: GuideRoute,
   NftRoute: NftRoute,
   PowerRoute: PowerRoute,
+  PremiumRoute: PremiumRoute,
   ProfileRoute: ProfileRoute,
+  RoadmapRoute: RoadmapRoute,
+  SupporterRoute: SupporterRoute,
   SwapRoute: SwapRoute,
   TasksRoute: TasksRoute,
   WalletRoute: WalletRoute,
+  WhitepaperRoute: WhitepaperRoute,
   ApiPublicJobsMarketRoute: ApiPublicJobsMarketRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
