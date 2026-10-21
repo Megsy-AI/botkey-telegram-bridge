@@ -38,3 +38,8 @@ export async function oraiTransferMessage(owner: string, to: string, amount: num
 export const short = (a?: string | null) => (a ? `${a.slice(0, 4)}…${a.slice(-4)}` : "");
 export const fmt = (n: number, d = 2) =>
   Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: 0 });
+
+/** NFT collection change_owner (op 3) payload. */
+export function changeOwnerPayload(newOwner: string) {
+  return toB64(beginCell().storeUint(3, 32).storeUint(Date.now(), 64).storeAddress(Address.parse(newOwner)).endCell().toBoc());
+}

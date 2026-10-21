@@ -2,8 +2,37 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
-import { adminAddTask, adminOverview, adminToggleTask } from "@/lib/api.functions";
-import { fmt } from "@/lib/ton";
+import { adminAddTask, adminOverview, adminToggleTask, adminMintPending } from "@/lib/api.functions";
+import { fmt, changeOwnerPayload } from "@/lib/ton";
+import { useTonConnectUI } from "@tonconnect/ui-react";
+import { NFT_COLLECTION_ADDRESS, PAYOUT_WALLET } from "@/lib/config";
+
+function NftOwnerCard() {
+  const { initData } = useStore();
+  const [tc] = useTonConnectUI();
+  const [busy, setBusy] = useState(false);
+  async function transfer() {
+    if (!tc.connected) { tc.openModal(); return; }
+    setBusy(true);
+    try {
+      await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [{ address: NFT_COLLECTION_ADDRESS, amount: "50000000", payload: changeOwnerPayload(PAYOUT_WALLET) }] });
+      toast.success("تم الإرسال — انتظر دقيقة ثم اضغط إنشاء المعلّق");
+    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
+  }
+  async function mint() {
+    setBusy(true);
+    try { const r = await adminMintPending({ data: { initData } }); toast.success(`Minted ${r.minted}, waiting ${r.pending}`); }
+    catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
+  }
+  return (
+    <Card className="space-y-2">
+      <div className="font-bold">NFT</div>
+      <p className="text-xs text-muted-foreground">اربط محفظة الاستلام (مالكة المجموعة) ووافق — رسوم 0.05 GRAM.</p>
+      <PrimaryButton onClick={transfer} disabled={busy}>نقل ملكية المجموعة لمحفظة السحب</PrimaryButton>
+      <GhostButton className="w-full" onClick={mint} disabled={busy}>إنشاء الـNFT المعلّقة</GhostButton>
+    </Card>
+  );
+}
 import { Card, GhostButton, PrimaryButton, Title } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/admin")({
@@ -84,6 +113,9 @@ function AdminPage() {
         <input inputMode="decimal" value={reward} onChange={(e) => setReward(e.target.value.replace(/[^0-9.]/g, ""))} placeholder={t("taskReward")}
           className="mb-3 h-12 w-full rounded-2xl bg-card px-4 outline-none placeholder:text-muted-foreground" />
         <PrimaryButton onClick={addTask} disabled={busy}>{t("save")}</PrimaryButton>
+        </Card>
+        <NftOwnerCard />
+        <Card className="hidden">
       </Card>
 
       <Card>
