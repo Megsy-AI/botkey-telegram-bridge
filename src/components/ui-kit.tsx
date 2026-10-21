@@ -6,7 +6,7 @@ export const GRAM_ICON =
 export const ORAI_ICON = oraiLogo.url;
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`glass rounded-3xl p-4 ${className}`}>{children}</div>;
+  return <div className={`glass rounded-2xl p-4 ${className}`}>{children}</div>;
 }
 
 export function PrimaryButton({ className = "", ...p }: ButtonHTMLAttributes<HTMLButtonElement>) {
@@ -24,7 +24,7 @@ export function GhostButton({ className = "", ...p }: ButtonHTMLAttributes<HTMLB
 }
 
 export function Title({ children }: { children: ReactNode }) {
-  return <h1 className="mb-4 text-3xl tracking-tight">{children}</h1>;
+  return <h1 className="mb-4 text-3xl">{children}</h1>;
 }
 
 export function CoinIcon({ src, className = "size-10" }: { src: string; className?: string }) {

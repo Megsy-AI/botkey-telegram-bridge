@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link, Outlet, useLocation, useRouter } from "@tanstack/react-router";
 import { TonConnectUIProvider } from "@tonconnect/ui-react";
-import { Home, ListChecks, Zap, Wallet, ArrowLeftRight } from "lucide-react";
+import { Home, ListChecks, Zap, Wallet, UserRound } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { StoreProvider, useStore } from "@/lib/store";
 import { getWebApp } from "@/lib/telegram";
@@ -12,7 +12,7 @@ const tabs = [
   { to: "/tasks", icon: ListChecks, key: "tasks" },
   { to: "/power", icon: Zap, key: "power" },
   { to: "/wallet", icon: Wallet, key: "wallet" },
-  { to: "/swap", icon: ArrowLeftRight, key: "swap" },
+  { to: "/profile", icon: UserRound, key: "profile" },
 ] as const;
 
 function BackButtonSync() {
@@ -30,7 +30,7 @@ function BackButtonSync() {
 }
 
 function Frame() {
-  const { data, error, t, demo } = useStore();
+  const { data, error, t, x, demo } = useStore();
   const { pathname } = useLocation();
   if (error) {
     return <div className="flex min-h-dvh items-center justify-center p-8 text-center text-muted-foreground">{error}</div>;
@@ -43,20 +43,20 @@ function Frame() {
     );
   }
   return (
-    <div className="safe-top mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-28">
+    <div className="safe-top mx-auto flex min-h-dvh max-w-md flex-col px-5 pb-28">
       {demo && (
         <div className="glass mb-3 rounded-2xl px-4 py-2 text-center text-xs text-muted-foreground">{t("openInTelegram")}</div>
       )}
       <Outlet />
       <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md px-4">
-        <div className="glass-strong flex items-center justify-between rounded-3xl px-2 py-2">
+        <div className="glass-strong flex items-center justify-between rounded-2xl px-2 py-2">
           {tabs.map(({ to, icon: Icon, key }) => {
             const active = pathname === to;
             return (
               <Link key={to} to={to}
                 className={`flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[10px] transition ${active ? "bg-accent text-primary" : "text-muted-foreground"}`}>
                 <Icon className="size-5" strokeWidth={2.4} />
-                {t(key)}
+                {key === "profile" ? x("profile") : t(key)}
               </Link>
             );
           })}

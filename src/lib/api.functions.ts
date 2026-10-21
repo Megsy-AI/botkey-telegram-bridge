@@ -335,3 +335,24 @@ export const myNfts = createServerFn({ method: "POST" })
     const { data: rows } = await db.from("nfts").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
     return { nfts: rows ?? [], collection: NFT_COLLECTION_ADDRESS, price: NFT_PRICE_GRAM };
   });
+
+export const walletChallenge = createServerFn({ method: "POST" }).inputValidator(auth).handler(async ({ data }) => {
+  const { user, db } = await ctx(data.initData);
+  const nonce = `${Date.now()}:${crypto.randomUUID()}`;
+  const { error } = await db.from("tg_users").update({ wallet_nonce: nonce }).eq("id", user.id);
+  if (error) throw new Error(error.message);
+  return { nonce };
+});
+export const proveWallet = createServerFn({ method: "POST" }).inputValidator((i: Auth & { address: string; proof: { timestamp: number; domain: { lengthBytes: number; value: string }; payload: string; signature: string } }) => ({ ...auth(i), address: i.address, proof: i.proof })).handler(async ({ data }) => {
+  const { user, db } = await ctx(data.initData);
+  const me = await loadUser(db, user.id);
+  if (!me.wallet_nonce || Date.now() - Number(me.wallet_nonce.split(":")[0]) > 300000) throw new Error("Request a new wallet verification");
+  const { getRequest } = await import("@tanstack/react-start/server");
+  const { verifyWalletProof } = await import("./wallet-proof.server");
+  const address = await verifyWalletProof(data.address, data.proof, me.wallet_nonce, new URL(getRequest().url).host);
+  const { data: other } = await db.from("tg_users").select("id").eq("wallet_address", address).eq("wallet_verified", true).neq("id", user.id).limit(1);
+  if (other?.length) throw new Error("Wallet already linked to another account");
+  const { error } = await db.from("tg_users").update({ wallet_address: address, wallet_verified: true, wallet_nonce: null }).eq("id", user.id).eq("wallet_nonce", me.wallet_nonce);
+  if (error) throw new Error(error.message);
+  return syncPower(db, user.id);
+});
