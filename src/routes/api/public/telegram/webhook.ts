@@ -11,6 +11,10 @@ const START: Record<string, { text: string; btn: string }> & { en: { text: strin
   fa: { text: "<b>به ORAI خوش آمدید</b>\n\n<b>هر ۲ ساعت ORAI استخراج کنید و قدرت خود را افزایش دهید.</b>", btn: "باز کردن" },
 };
 
+// Public front door (Vercel). The webhook runs behind a proxy, so request.url is not the public host.
+const PUBLIC_APP_URL = "https://orange-telegram.vercel.app";
+const BANNER_VERSION = "20261021b";
+
 async function sha256b64url(s: string) {
   const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return btoa(String.fromCharCode(...new Uint8Array(d))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -32,7 +36,7 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
         if (command === "/101") {
           const { isAdminUsername } = await import("@/lib/config");
           if (msg.chat?.type !== "private" || !isAdminUsername(msg.from?.username)) return Response.json({ ok: true });
-          const url = process.env['APP_URL'] || new URL(request.url).origin;
+          const url = PUBLIC_APP_URL;
           const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: msg.chat.id, text: "<b>Orange Admin</b>", parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "Admin", web_app: { url: `${url}/admin` } }]] } }) });
           if (!response.ok) console.error("Admin message failed", response.status);
           return Response.json({ ok: true });
@@ -42,7 +46,7 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
         const lang = pickLang(msg.from?.language_code);
         const s = START[lang as string] ?? START.en;
         const param = msg.text.split(" ")[1];
-        const url = process.env['APP_URL'] || new URL(request.url).origin;
+        const url = PUBLIC_APP_URL;
         if (param?.startsWith("ref_") && msg.from?.id) {
           const ref = Number(param.slice(4));
           const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
@@ -56,7 +60,7 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
             }
           }
         }
-        const photo = `${new URL(request.url).origin}/start-banner.jpg`;
+        const photo = `${PUBLIC_APP_URL}/start-banner.jpg?v=${BANNER_VERSION}`;
 
         const r = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
           method: "POST",
