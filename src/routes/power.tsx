@@ -159,13 +159,13 @@ function Power() {
       </div>
       <PrimaryButton className="mt-4" onClick={boost}>{ar ? "زيادة قوة التعدين" : "Boost mining power"}</PrimaryButton>
 
-      <div className="mt-6 space-y-2">
+      <div className="mt-6 grid grid-cols-2 gap-3">
         {tiers.map((l) => {
           const active = l.level === lvl;
-          return <button key={l.level} onClick={active ? undefined : boost} className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-start transition active:scale-[0.99] ${active ? "bg-accent ring-2 ring-primary" : "bg-card"}`}>
-            <span className={`flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{l.level}</span>
-            <span className="min-w-0 flex-1 text-base font-bold tabular-nums" dir="ltr">${fmt(l.price, 2)}</span>
-            <span className="text-sm font-bold tabular-nums text-primary" dir="ltr">+${fmt(l.perDay, 2)}</span>
+          return <button key={l.level} onClick={active ? undefined : boost} className={`rounded-3xl p-4 text-start transition active:scale-[0.97] ${active ? "bg-primary text-primary-foreground" : "bg-card"}`}>
+            <div className={`text-xs font-bold ${active ? "opacity-80" : "text-muted-foreground"}`}>{ar ? "المستوى" : "Level"} {l.level}</div>
+            <div className="mt-2 text-2xl font-bold tabular-nums" dir="ltr">${fmt(l.price, 2)}</div>
+            <div className={`mt-3 rounded-xl px-2.5 py-1.5 text-center text-xs font-bold tabular-nums ${active ? "bg-primary-foreground/20" : "bg-accent text-primary"}`} dir="ltr">+${fmt(l.perDay, 2)} / {ar ? "يوم" : "day"}</div>
           </button>;
         })}
       </div>
