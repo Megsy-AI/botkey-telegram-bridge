@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "https://botkey-telegram-bridge.lovable.app/$1"
+    }
+  ]
+}
