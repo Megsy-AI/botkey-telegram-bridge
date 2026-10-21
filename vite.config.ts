@@ -15,7 +15,9 @@ export default defineConfig({
         // swaps it for an empty browser-external stub and @ton/core crashes.
         name: "buffer-polyfill-resolve",
         enforce: "pre",
-        resolveId(source: string) {
+        resolveId(source: string, _importer: string | undefined, options: { ssr?: boolean }) {
+          // Client bundle only — the server (workerd) has a native buffer builtin.
+          if (options?.ssr) return null;
           if (source === "buffer" || source === "node:buffer") {
             return fileURLToPath(new URL("./node_modules/buffer/index.js", import.meta.url));
           }
