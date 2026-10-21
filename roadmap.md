@@ -1,5 +1,10 @@
 # Orange — task roadmap
 
+## Current requests
+- [ ] Republish the current app through the Vercel front door.
+- [ ] Audit actual website and bot language coverage and report translation fallbacks.
+- [ ] Continue NFT setup discussion; obtain collection details needed for a safe mint review.
+
 ## Completed
 - [x] Continuous mining, two-hour accumulation cap and automatic restart on claim; atomic claim and 10% additional referral credit.
 - [x] No ORAI deduction to unlock power; staged USD holding tiers with hourly market snapshots and automatic up/down synchronization when price is available.
