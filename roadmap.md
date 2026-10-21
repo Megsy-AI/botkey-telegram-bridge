@@ -10,9 +10,9 @@
 - [x] V5 payout fix, atomic withdrawal reservation and confirmation checks. Real 0.01 ORAI transfer between project wallets confirmed; full user fee/payment flow still not exercised.
 - [x] Nine tests pass; authenticated Arabic mobile pages load without runtime errors or horizontal overflow.
 - [x] Lovable publishing requested.
+- [x] Vercel reverse-proxy deployment ready at https://orange-telegram.vercel.app; authenticated Arabic UI and Cloud reads verified, no runtime errors.
 
 ## Blocked / incomplete
-- [ ] Vercel deployment: stored token rejected with invalidToken; needs a new valid token. Reverse-proxy configuration prepared in temporary staging.
 - [ ] Dollar pricing and prefilled purchase amount: STON.fi currently reports no ORAI liquidity and no price. Quantity copy/open fallback implemented; STON URL amount selection is undocumented.
 - [ ] NFT: owner must supply collection address, price, metadata and compatible mint contract. Current mint must be reviewed against that contract before enabling.
 - [ ] Full user withdrawal flow: requires user wallet signature and fee; only direct real payout was verified. Ambiguous broadcasts stay pending for safe reconciliation.
