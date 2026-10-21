@@ -90,21 +90,6 @@ function NftTab() {
   );
 }
 
-
-      {owned.length > 0 && (
-        <Card>
-          {owned.map((n) => (
-            <div key={n.id} className="flex justify-between border-t border-muted py-2 text-sm first:border-0">
-              <span>ORAI NFT #{n.item_index}</span>
-              <span className="text-muted-foreground">{new Date(n.created_at).toLocaleDateString()}</span>
-            </div>
-          ))}
-        </Card>
-      )}
-    </div>
-  );
-}
-
 function Power() {
   const { data, t, x, demo, initData, patchMe } = useStore();
   const { tab } = Route.useSearch();
