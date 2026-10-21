@@ -8,7 +8,7 @@ import { useStore } from "@/lib/store";
 import { getMarket, walletBalances, setWallet, requestWithdraw, checkWithdrawal, walletChallenge, proveWallet } from "@/lib/api.functions";
 import { MIN_WITHDRAW, RECEIVE_WALLET, WITHDRAW_FEE_GRAM } from "@/lib/config";
 import { commentPayload, fmt, oraiTransferMessage, short } from "@/lib/ton";
-import { CoinIcon, GhostButton, GRAM_ICON, ORAI_ICON, PrimaryButton, Title } from "@/components/ui-kit";
+import { CoinIcon, GhostButton, GRAM_ICON, ORAI_ICON, PrimaryButton } from "@/components/ui-kit";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 export const Route = createFileRoute("/wallet")({ ssr: false, head: () => ({ meta: [
  { title: "Orange — Wallet" }, { name: "description", content: "Your ORAI balance, TON wallet, deposits and withdrawals." }, { property: "og:title", content: "Orange Wallet" }, { property: "og:description", content: "Your ORAI balance, TON wallet, deposits and withdrawals." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }
@@ -59,7 +59,7 @@ function WalletPage() {
      setAmount(""); setMode(null);
    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
  }
- return <div><Title>{t("wallet")}</Title>
+ return <div>
    <div className="py-7 text-center"><div className="text-sm text-muted-foreground">{t("balance")}</div><div className="mt-3 flex items-center justify-center gap-2 break-all text-4xl"><CoinIcon src={ORAI_ICON} className="size-8" />{fmt(Number(me.balance), 4)}</div><div className="mt-2 text-sm text-muted-foreground">ORAI {market?.orai.priceUsd ? `· $${fmt(Number(me.balance) * market.orai.priceUsd, 2)}` : ""}</div></div>
    {!address ? <PrimaryButton onClick={connect}>{t("connectWallet")}</PrimaryButton> : <><div className="mb-4 text-center text-sm text-muted-foreground" dir="ltr">{short(address)}</div><div className="grid grid-cols-2 gap-3"><PrimaryButton onClick={() => { setCoin("ORAI"); setMode("withdraw"); }}>{t("withdraw")}</PrimaryButton><GhostButton className="h-14" onClick={() => setMode("deposit")}>{t("deposit")}</GhostButton></div></>}
    <div className="mt-8 border-t border-input pt-5"><h2 className="mb-4 text-sm text-muted-foreground">{x("holdings")}</h2>{[{ s: "ORAI", name: market?.orai.name || "Orange AI", icon: ORAI_ICON, price: market?.orai.priceUsd, balance: chain?.orai }, { s: "GRAM", name: "Gram", icon: GRAM_ICON, price: market?.gram.priceUsd, balance: chain?.gram }].map(c => <div key={c.s} className="flex items-center gap-3 border-b border-input py-4"><CoinIcon src={c.icon} className="size-11" /><div className="min-w-0 flex-1"><div>{c.name}</div><div className="mt-1 text-xs text-muted-foreground">{c.s} · {c.price ? `$${fmt(c.price, 8)}` : "—"}</div></div><div className="text-end"><div>{c.balance === undefined ? "—" : fmt(c.balance, 4)}</div><div className="mt-1 text-xs text-muted-foreground">{c.s}</div></div></div>)}</div>

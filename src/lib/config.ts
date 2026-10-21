@@ -15,7 +15,7 @@ export const DECIMALS = 9;
 export const WITHDRAW_FEE_GRAM = 0.15;
 export const ADMIN_USERNAMES = ["eigiza"];
 export const NFT_COLLECTION_ADDRESS = "EQAUV6nlIAxPqWMy-vpuuTXu14bGyYJjeK7wgiqs0COnbv2X";
-export const NFT_COLLECTION_URL = `https://getgems.io/collection/${NFT_COLLECTION_ADDRESS}`;
+export const NFT_COLLECTION_URL = "https://getgems.io/orangeai";
 /** Ten NFT tiers paid in GRAM: higher price → bigger mining, referral and task boosts. */
 export const NFT_TIERS = [
   { tier: 1, name: "Orange Rookie", price: 0.5, mining: 0.03, referral: 0.01, tasks: 1.05 },
