@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import {
   MINING_HOURS, POWER_LEVELS, REFERRAL_BONUS, MIN_WITHDRAW, ORAI_JETTON, GRAM_ADDRESS,
   RECEIVE_WALLET, WITHDRAW_FEE_GRAM, ADMIN_USERNAMES, NFT_COLLECTION_ADDRESS, NFT_PRICE_GRAM,
-  sessionReward, levelForHoldings,
+  sessionReward, levelForHoldings, dailyOrai, MARKET_MAX_AGE,
 } from "./config";
 
 type Auth = { initData: string };
@@ -44,6 +44,7 @@ export const bootstrap = createServerFn({ method: "POST" })
     } else {
       await db.from("tg_users").update(profile).eq("id", user.id);
     }
+    await syncPower(db, user.id);
     const [me, tasks, done, refs, wd] = await Promise.all([
       loadUser(db, user.id),
       db.from("tasks").select("*").eq("active", true).order("sort"),
@@ -67,9 +68,10 @@ export const startMining = createServerFn({ method: "POST" })
     const { user, db } = await ctx(data.initData);
     const me = await loadUser(db, user.id);
     if (me.mining_started_at) throw new Error("Already mining");
+    const synced = await syncPower(db, user.id);
     const now = new Date().toISOString();
-    await db.from("tg_users").update({ mining_started_at: now }).eq("id", user.id);
-    return { mining_started_at: now };
+    await db.from("tg_users").update({ mining_started_at: now, mining_settled_at: now, mining_pending: 0 }).eq("id", user.id);
+    return { mining_started_at: now, mining_settled_at: now, mining_pending: 0, mining_rate_daily: synced.mining_rate_daily };
   });
 
 export const claimMining = createServerFn({ method: "POST" })
@@ -78,12 +80,10 @@ export const claimMining = createServerFn({ method: "POST" })
     const { user, db } = await ctx(data.initData);
     const me = await loadUser(db, user.id);
     if (!me.mining_started_at) throw new Error("Not mining");
-    const ends = new Date(me.mining_started_at).getTime() + MINING_HOURS * 3600_000;
-    if (Date.now() < ends) throw new Error("Mining not finished");
-    const pro = me.subscribed_until && new Date(me.subscribed_until).getTime() > Date.now();
-    const balance = Number(me.balance) + sessionReward(me.power_level) * (pro ? 2 : 1);
-    await db.from("tg_users").update({ balance, mining_started_at: null }).eq("id", user.id);
-    return { balance };
+    const { data: result, error } = await db.rpc("orange_mining_claim", { p_user_id: user.id });
+    if (error) throw new Error(error.message);
+    await syncPower(db, user.id);
+    return { ...result, ...await loadUser(db, user.id) };
   });
 
 export const completeTask = createServerFn({ method: "POST" })
@@ -97,21 +97,16 @@ export const completeTask = createServerFn({ method: "POST" })
     const me = await loadUser(db, user.id);
     const balance = Number(me.balance) + Number(task.reward);
     await db.from("tg_users").update({ balance }).eq("id", user.id);
-    return { balance };
+    const synced = await syncPower(db, user.id);
+    return { balance, power_level: synced.power_level };
   });
 
 export const upgradePower = createServerFn({ method: "POST" })
   .inputValidator((i: Auth & { level: number }) => ({ ...auth(i), level: Number(i.level) }))
   .handler(async ({ data }) => {
     const { user, db } = await ctx(data.initData);
-    const target = POWER_LEVELS[data.level];
-    if (!target) throw new Error("Invalid level");
-    const me = await loadUser(db, user.id);
-    if (target.level <= me.power_level) throw new Error("Already unlocked");
-    if (Number(me.balance) < target.price) throw new Error("Not enough ORAI");
-    const balance = Number(me.balance) - target.price;
-    await db.from("tg_users").update({ balance, power_level: target.level }).eq("id", user.id);
-    return { balance, power_level: target.level };
+    // Compatibility endpoint: holding coins grants power; never debit a balance.
+    return syncPower(db, user.id);
   });
 
 async function oraiHoldings(owner: string) {
@@ -126,7 +121,7 @@ export const setWallet = createServerFn({ method: "POST" })
   .inputValidator((i: Auth & { address: string | null }) => ({ ...auth(i), address: i.address ? String(i.address).slice(0, 80) : null }))
   .handler(async ({ data }) => {
     const { user, db } = await ctx(data.initData);
-    await db.from("tg_users").update({ wallet_address: data.address }).eq("id", user.id);
+    await db.from("tg_users").update({ wallet_address: data.address, wallet_verified: false }).eq("id", user.id);
     return { ok: true };
   });
 
@@ -135,12 +130,7 @@ export const verifyHoldings = createServerFn({ method: "POST" })
   .inputValidator(auth)
   .handler(async ({ data }) => {
     const { user, db } = await ctx(data.initData);
-    const me = await loadUser(db, user.id);
-    if (!me.wallet_address) throw new Error("Connect your wallet first");
-    const holdings = await oraiHoldings(me.wallet_address);
-    const lvl = Math.max(me.power_level, levelForHoldings(holdings));
-    await db.from("tg_users").update({ power_level: lvl }).eq("id", user.id);
-    return { holdings, power_level: lvl };
+    return syncPower(db, user.id);
   });
 
 /** Polls the receive wallet for an on-chain payment carrying a specific comment. */
@@ -182,24 +172,58 @@ export const requestWithdraw = createServerFn({ method: "POST" })
     return { balance, status: "sent" };
   });
 
-export const getMarket = createServerFn({ method: "GET" }).handler(async () => {
+async function marketSnapshot(db: any, force = false) {
+  const { data: cached } = await db.from("market_snapshots").select("*").eq("id", "orai").maybeSingle();
+  if (!force && cached && Date.now() - new Date(cached.updated_at).getTime() < MARKET_MAX_AGE) return cached.data;
   const get = async (addr: string) => {
-    try {
-      const r = await fetch(`https://api.ston.fi/v1/assets/${addr}`);
-      const j = (await r.json()) as any;
-      const a = j.asset ?? {};
-      return { symbol: a.symbol ?? "", name: a.display_name ?? "", image: a.image_url ?? "", priceUsd: Number(a.dex_price_usd ?? a.third_party_price_usd ?? 0) };
-    } catch {
-      return { symbol: "", name: "", image: "", priceUsd: 0 };
-    }
+    const response = await fetch(`https://api.ston.fi/v1/assets/${addr}`);
+    if (!response.ok) throw new Error(`STON price unavailable [${response.status}]`);
+    const json = await response.json() as any;
+    const asset = json.asset ?? {};
+    return { symbol: asset.symbol ?? "", name: asset.display_name ?? "", image: asset.image_url ?? "", priceUsd: Number(asset.dex_price_usd || asset.third_party_price_usd || 0) };
   };
-  const [orai, gram] = await Promise.all([get(ORAI_JETTON), get(GRAM_ADDRESS)]);
-  return { orai: { ...orai, symbol: "ORAI", name: orai.name || "Orange AI" }, gram: { ...gram, symbol: "GRAM", name: "Gram" } };
+  try {
+    await ctx(data.initData);
+    const [orai, gram] = await Promise.all([get(ORAI_JETTON), get(GRAM_ADDRESS)]);
+    if (!Number.isFinite(orai.priceUsd) || orai.priceUsd <= 0) throw new Error("ORAI price unavailable");
+    const result = { orai: { ...orai, symbol: "ORAI", name: orai.name || "Orange AI" }, gram: { ...gram, symbol: "GRAM", name: "Gram" }, updatedAt: new Date().toISOString(), stale: false };
+    const { error } = await db.from("market_snapshots").upsert({ id: "orai", data: result, updated_at: result.updatedAt });
+    if (error) throw new Error(error.message);
+    return result;
+  } catch (error) {
+    console.error("Market refresh failed", error);
+    if (cached) return { ...cached.data, stale: true };
+    return { orai: { symbol: "ORAI", name: "Orange AI", image: "", priceUsd: 0 }, gram: { symbol: "GRAM", name: "Gram", image: "", priceUsd: 0 }, updatedAt: null, stale: true };
+  }
+}
+async function syncPower(db: any, id: number) {
+  const me = await loadUser(db, id);
+  const market = await marketSnapshot(db);
+  let external = 0;
+  try { if (me.wallet_verified && me.wallet_address) external = await oraiHoldings(me.wallet_address); }
+  catch { return { ...me, market, holdings: null, syncUnavailable: true }; }
+  if (!market.orai.priceUsd || market.stale) return { ...me, market, holdings: Number(me.balance) + external, syncUnavailable: true };
+  const holdings = Number(me.balance) + external;
+  const level = levelForHoldings(holdings, market.orai.priceUsd);
+  const pro = me.subscribed_until && new Date(me.subscribed_until).getTime() > Date.now();
+  const rate = dailyOrai(level, market.orai.priceUsd) * (pro ? 2 : 1);
+  const { error } = await db.rpc("orange_sync_power", { p_user_id: id, p_level: level, p_rate: rate });
+  if (error) throw new Error(error.message);
+  return { ...await loadUser(db, id), market, holdings, syncUnavailable: false };
+}
+export const getMarket = createServerFn({ method: "POST" }).inputValidator(auth).handler(async ({ data }) => {
+  const { db } = await ctx(data.initData);
+  return marketSnapshot(db);
+});
+export const refreshMarket = createServerFn({ method: "POST" }).inputValidator(auth).handler(async ({ data }) => {
+  const { db } = await adminCtx(data.initData);
+  return marketSnapshot(db, true);
 });
 
 export const walletBalances = createServerFn({ method: "POST" })
-  .inputValidator((i: { address: string }) => ({ address: String(i.address).slice(0, 80) }))
+  .inputValidator((i: Auth & { address: string }) => ({ ...auth(i), address: String(i.address).slice(0, 80) }))
   .handler(async ({ data }) => {
+    await ctx(data.initData);
     const [orai, gram] = await Promise.all([
       oraiHoldings(data.address).catch(() => 0),
       fetch(`https://toncenter.com/api/v3/account?address=${encodeURIComponent(data.address)}`)
