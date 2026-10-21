@@ -1,4 +1,4 @@
-import { Address, beginCell, internal, SendMode, toNano, TonClient, WalletContractV5R1 } from "@ton/ton";
+import { Address, beginCell, internal, SendMode, toNano, TonClient, WalletContractV5R1, external, storeMessage } from "@ton/ton";
 import { mnemonicToPrivateKey } from "@ton/crypto";
 import { ORAI_JETTON, PAYOUT_WALLET } from "./config";
 
@@ -50,14 +50,15 @@ export async function sendOrai(to: string, amount: number, queryId = Date.now())
     .storeCoins(toNano("0.01"))
     .storeBit(0)
     .endCell();
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  const seqno = await contract.getSeqno();
-  await contract.sendTransfer({
-    seqno,
-    secretKey: key.secretKey,
-    sendMode: SendMode.PAY_GAS_SEPARATELY,
-    messages: [internal({ to: jettonWallet, value: toNano("0.05"), body })],
-  });
+  const stateResponse = await fetch(`https://toncenter.com/api/v3/walletStates?address=${PAYOUT_WALLET}`);
+  if (!stateResponse.ok) throw new Error(`Wallet state unavailable [${stateResponse.status}]`);
+  const state = await stateResponse.json() as any;
+  const seqno = state.wallets?.[0]?.seqno;
+  if (typeof seqno !== "number") throw new Error("Payout wallet is not active");
+  const transfer = contract.createTransfer({ seqno, secretKey: key.secretKey, sendMode: SendMode.PAY_GAS_SEPARATELY, messages: [internal({ to: jettonWallet, value: toNano("0.05"), body })] });
+  const boc = beginCell().store(storeMessage(external({ to: contract.address, body: transfer }))).endCell().toBoc().toString("base64");
+  const broadcast = await fetch("https://toncenter.com/api/v3/message", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ boc }) });
+  if (!broadcast.ok) throw new Error(`Broadcast failed [${broadcast.status}]: ${await broadcast.text()}`);
   return { seqno, queryId };
 }
 
