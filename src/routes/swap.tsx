@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { SWAP_URL } from "@/lib/config";
 
 export const Route = createFileRoute("/swap")({
   ssr: false,
+  beforeLoad: () => { throw redirect({ to: "/profile", statusCode: 301 }); },
   head: () => ({
     meta: [
       { title: "Orange — Swap" },
