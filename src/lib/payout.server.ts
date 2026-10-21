@@ -50,6 +50,7 @@ export async function sendOrai(to: string, amount: number, queryId = Date.now())
     .storeCoins(toNano("0.01"))
     .storeBit(0)
     .endCell();
+  await new Promise(resolve => setTimeout(resolve, 1500));
   const seqno = await contract.getSeqno();
   await contract.sendTransfer({
     seqno,
@@ -74,6 +75,7 @@ export async function mintNft(collection: string, itemIndex: number, owner: stri
     .storeCoins(toNano("0.05"))
     .storeRef(content)
     .endCell();
+  await new Promise(resolve => setTimeout(resolve, 1500));
   const seqno = await contract.getSeqno();
   await contract.sendTransfer({
     seqno,

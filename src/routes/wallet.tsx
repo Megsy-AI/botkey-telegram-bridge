@@ -43,7 +43,7 @@ function WalletPage() {
        await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [msg] }); toast(t("pending"));
      } else {
        await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [{ address: RECEIVE_WALLET, amount: toNano(String(WITHDRAW_FEE_GRAM)).toString(), payload: commentPayload(`fee:${me.id}`) }] });
-       toast(t("pending")); const result = await requestWithdraw({ data: { initData, amount: n } }); patchMe({ balance: result.balance }); await refresh(); toast.success(result.status === "sent" ? t("sent") : t("pending"));
+       toast(t("pending")); const result = await requestWithdraw({ data: { initData, amount: n } }); patchMe({ balance: result.balance }); await refresh(); toast(t("pending"));
      }
      setAmount(""); setMode(null);
    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
