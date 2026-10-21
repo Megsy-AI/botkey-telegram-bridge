@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import {
   MINING_HOURS, POWER_LEVELS, REFERRAL_BONUS, MIN_WITHDRAW, ORAI_JETTON, GRAM_ADDRESS,
-  RECEIVE_WALLET, WITHDRAW_FEE_GRAM, ADMIN_USERNAMES, NFT_COLLECTION_ADDRESS, NFT_PRICE_GRAM,
+  RECEIVE_WALLET, PAYOUT_WALLET, WITHDRAW_FEE_GRAM, ADMIN_USERNAMES, NFT_COLLECTION_ADDRESS, NFT_PRICE_GRAM,
   sessionReward, levelForHoldings, dailyOrai, MARKET_MAX_AGE,
 } from "./config";
 
@@ -44,6 +44,7 @@ export const bootstrap = createServerFn({ method: "POST" })
     } else {
       await db.from("tg_users").update(profile).eq("id", user.id);
     }
+    await reconcileWithdrawals(db, user.id);
     await syncPower(db, user.id);
     const [me, tasks, done, refs, wd] = await Promise.all([
       loadUser(db, user.id),
@@ -346,4 +347,29 @@ export const proveWallet = createServerFn({ method: "POST" }).inputValidator((i:
   const { error } = await db.from("tg_users").update({ wallet_address: address, wallet_verified: true, wallet_nonce: null }).eq("id", user.id).eq("wallet_nonce", me.wallet_nonce);
   if (error) throw new Error(error.message);
   return syncPower(db, user.id);
+});
+
+async function reconcileWithdrawals(db: any, id: number) {
+  const { data: pending } = await db.from("withdrawals").select("id,tx_hash,amount,to_address").eq("user_id", id).in("status", ["pending", "submitted"]).limit(20);
+  if (!pending?.length) return;
+  try {
+    const response = await fetch(`https://toncenter.com/api/v3/jetton/transfers?owner_address=${PAYOUT_WALLET}&jetton_master=${ORAI_JETTON}&limit=100`);
+    if (!response.ok) return;
+    const json = await response.json() as any;
+    const { Address } = await import("@ton/core");
+    for (const row of pending) {
+      const transfer = (json.jetton_transfers ?? []).find((t: any) => String(t.query_id) === row.tx_hash && Number(t.amount) / 1e9 === Number(row.amount) && t.destination && Address.parse(t.destination).equals(Address.parse(row.to_address)));
+      if (!transfer) continue;
+      if (transfer.transaction_aborted) await db.rpc("orange_refund_withdrawal", { p_id: row.id });
+      else await db.from("withdrawals").update({ status: "sent", tx_hash: transfer.transaction_hash }).eq("id", row.id);
+    }
+  } catch (error) { console.error("Withdrawal status check failed", error); }
+}
+export const checkWithdrawal = createServerFn({ method: "POST" }).inputValidator((i: Auth & { amount: number }) => ({ ...auth(i), amount: Number(i.amount) })).handler(async ({ data }) => {
+  const { user, db } = await ctx(data.initData);
+  const me = await loadUser(db, user.id);
+  if (!Number.isFinite(data.amount) || data.amount < MIN_WITHDRAW || data.amount > Number(me.balance)) throw new Error("Not enough ORAI or below minimum withdrawal");
+  const { payoutPreflight } = await import("./payout.server");
+  await payoutPreflight(data.amount);
+  return { ok: true };
 });
