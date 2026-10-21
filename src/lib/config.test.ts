@@ -10,3 +10,16 @@ describe("Orange holding and mining rules", () => {
   it("automatically downgrades when holdings fall", () => expect(levelForHoldings(10, 0.1)).toBeLessThan(levelForHoldings(100, 0.1)));
   it("admin command authorization allows only configured username", () => { expect(isAdminUsername("eIgiza")).toBe(true); expect(isAdminUsername("guest")).toBe(false); });
 });
+
+import { NFT_TIERS, nftBenefits } from "./config";
+describe("NFT tiers", () => {
+  it("has 10 tiers with rising price and mining boost", () => {
+    expect(NFT_TIERS).toHaveLength(10);
+    for (let i = 1; i < 10; i++) { expect(NFT_TIERS[i].price).toBeGreaterThan(NFT_TIERS[i - 1].price); expect(NFT_TIERS[i].mining).toBeGreaterThan(NFT_TIERS[i - 1].mining); }
+  });
+  it("uses the best owned tier, not stacking", () => {
+    expect(nftBenefits([])).toEqual({ mining: 1, referralRate: 0.1, tasks: 1 });
+    const b = nftBenefits([1, 10]);
+    expect(b.mining).toBeCloseTo(3.5); expect(b.referralRate).toBeCloseTo(0.25); expect(b.tasks).toBe(2.5);
+  });
+});
