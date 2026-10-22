@@ -48,8 +48,13 @@
 - [x] Remove wallet address from wallet banner
 - [x] Show withdraw/deposit once wallet connected
 - [x] Redesign power level cards
-- [ ] Remove "Start" task; STON buy task with real on-chain check
-- [ ] Add channel as task
-- [ ] Auto-translate admin-added tasks
-- [ ] Redesign profile page
-- [ ] Complete translations for all languages
+- [x] Remove "Start" task; STON buy task with real on-chain check
+- [x] Add channel as task
+- [x] Auto-translate admin-added tasks
+- [x] Redesign profile page
+- [x] Complete translations for all languages
+- [ ] Tasks grouped by app: app card (name+image) opens its own tasks page; admin sets image per task/app
+- [ ] NFT minting via Getgems minting API (minting wallet must hold GRAM)
+- [ ] Fix automatic withdrawals
+- [ ] Wallet balance flicker + mined coins not showing
+- [ ] Android-style top notifications
