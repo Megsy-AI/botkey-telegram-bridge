@@ -313,8 +313,9 @@ export const adminOverview = createServerFn({ method: "POST" })
   });
 
 export const adminAddTask = createServerFn({ method: "POST" })
-  .inputValidator((i: Auth & { title: string; link: string; reward: number }) => ({
+  .inputValidator((i: Auth & { title: string; link: string; reward: number; appName?: string; image?: string }) => ({
     ...auth(i), title: String(i.title).slice(0, 120), link: String(i.link).slice(0, 300), reward: Number(i.reward),
+    appName: String(i.appName ?? "").trim().slice(0, 60), image: String(i.image ?? "").slice(0, 120000),
   }))
   .handler(async ({ data }) => {
     const { db } = await adminCtx(data.initData);
@@ -323,7 +324,8 @@ export const adminAddTask = createServerFn({ method: "POST" })
     const kind = /ston\.fi/i.test(data.link) ? "ston" : priv ? "channel" : "link";
     const { translateTitle } = await import("./translate.server");
     const title_i18n = await translateTitle(data.title);
-    const { error } = await db.from("tasks").insert({ title: data.title, link: data.link, reward: data.reward, kind, chat_id: priv ? `-100${priv[1]}` : null, title_i18n });
+    const { error } = await db.from("tasks").insert({ title: data.title, link: data.link, reward: data.reward, kind, chat_id: priv ? `-100${priv[1]}` : null, title_i18n,
+      app_name: data.appName || null, app_image: data.image || null, image_url: data.image || null });
     if (error) throw new Error(error.message);
     return { ok: true };
   });

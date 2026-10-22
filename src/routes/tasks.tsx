@@ -30,6 +30,7 @@ const BOT_USERNAME = "sramaibot";
 function Tasks() {
   const { data, t, x, initData, demo, setData, lang } = useStore();
   const [tab, setTab] = useState<"tasks" | "refs">("tasks");
+  const [app, setApp] = useState<string | null>(null);
   const [opened, setOpened] = useState<Record<string, boolean>>({});
   const waiting = useRef<any>(null);
   useEffect(() => {
@@ -42,6 +43,12 @@ function Tasks() {
   const me = data.me;
   const link = `https://t.me/${BOT_USERNAME}?start=ref_${me.id}`;
   const pending = data.tasks.filter((task: any) => !data.done.includes(task.id));
+  const apps = new Map<string, { name: string; image?: string; tasks: any[] }>();
+  for (const task of pending) if (task.app_name) {
+    const a = apps.get(task.app_name) ?? { name: task.app_name, image: task.app_image || task.image_url, tasks: [] };
+    a.tasks.push(task); apps.set(task.app_name, a);
+  }
+  const shown = app ? (apps.get(app)?.tasks ?? []) : pending.filter((task: any) => !task.app_name);
 
   async function claim(task: any, silent = false) {
     if (demo) { toast(t("openInTelegram")); return; }
@@ -71,8 +78,26 @@ function Tasks() {
       {tab === "tasks" ? (
         pending.length === 0
           ? <div className="rounded-2xl bg-card py-12 text-center text-sm font-bold text-muted-foreground">{x("allDone")}</div>
-          : <div className="overflow-hidden rounded-2xl bg-card">
-            {pending.map((task: any, i: number) => (
+          : <div className="space-y-3">
+            {app ? (
+              <button onClick={() => setApp(null)} className="flex w-full items-center gap-3 rounded-2xl bg-card p-3 text-start">
+                <CoinIcon src={apps.get(app)?.image || ORAI_ICON} className="size-12 rounded-2xl" />
+                <div className="min-w-0 flex-1"><div className="truncate text-lg font-bold">{app}</div><div className="text-xs font-bold text-muted-foreground">{shown.length}</div></div>
+                <span className="text-xl font-bold text-muted-foreground">{ar ? "›" : "‹"}</span>
+              </button>
+            ) : apps.size > 0 && (
+              <div className="grid grid-cols-2 gap-3">
+                {[...apps.values()].map((a) => (
+                  <button key={a.name} onClick={() => setApp(a.name)} className="flex flex-col items-center gap-2 rounded-2xl bg-card p-4 transition active:scale-95">
+                    <CoinIcon src={a.image || ORAI_ICON} className="size-14 rounded-2xl" />
+                    <div className="w-full truncate text-center font-bold">{a.name}</div>
+                    <div className="rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-bold text-primary" dir="ltr">{a.tasks.length} · +{fmt(a.tasks.reduce((s, t) => s + Number(t.reward), 0))}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {shown.length > 0 && <div className="overflow-hidden rounded-2xl bg-card">
+            {shown.map((task: any, i: number) => (
               <div key={task.id} className={`flex items-center gap-3 px-4 py-3.5 ${i ? "border-t border-muted" : ""}`}>
                 <CoinIcon src={task.image_url || ORAI_ICON} className="size-11" />
                 <div className="min-w-0 flex-1">
@@ -85,6 +110,7 @@ function Tasks() {
                 </button>
               </div>
             ))}
+          </div>}
           </div>
       ) : (
         <div className="space-y-4">
