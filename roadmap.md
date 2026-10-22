@@ -58,3 +58,4 @@
 - [ ] Fix automatic withdrawals
 - [ ] Wallet balance flicker + mined coins not showing
 - [ ] Android-style top notifications
+- [ ] In-app real ORAI buy through DEX pool (needs owner decision on liquidity pool)
