@@ -11,6 +11,7 @@ function NftOwnerCard() {
   const { initData } = useStore();
   const [tc] = useTonConnectUI();
   const [busy, setBusy] = useState(false);
+  async function transfer() {
     if (!tc.connected) { tc.openModal(); return; }
     setBusy(true);
     try {
@@ -71,7 +72,6 @@ function AdminPage() {
     };
     img.src = URL.createObjectURL(f);
   }
-  async function transfer() {
 
   const load = () => adminOverview({ data: { initData } }).then(setOv).catch((e) => toast.error(e.message));
   useEffect(() => { if (data?.isAdmin) load(); }, [data?.isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
