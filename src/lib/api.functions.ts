@@ -154,10 +154,10 @@ export const verifyHoldings = createServerFn({ method: "POST" })
   });
 
 /** Polls the receive wallet for an on-chain payment carrying a specific comment. */
-async function findPayment(tag: string, minValue: number, attempts = 8, used = new Set<unknown>()) {
+async function findPayment(tag: string, minValue: number, attempts = 8, used = new Set<unknown>(), account: string = RECEIVE_WALLET) {
   for (let i = 0; i < attempts; i++) {
     try {
-      const r = await fetch(`https://toncenter.com/api/v3/transactions?account=${RECEIVE_WALLET}&limit=100&sort=desc`);
+      const r = await fetch(`https://toncenter.com/api/v3/transactions?account=${account}&limit=100&sort=desc`);
       if (r.ok) {
         const j = (await r.json()) as any;
         const tx = (j.transactions ?? []).find((t: any) =>
@@ -181,10 +181,9 @@ export const requestWithdraw = createServerFn({ method: "POST" })
     const { data: pending } = await db.from("withdrawals").select("id").eq("user_id", user.id).in("status", ["pending", "submitted"]).limit(1);
     if (pending?.length) throw new Error("Your earlier withdrawal is still being confirmed");
     const { sendOrai, payoutPreflight } = await import("./payout.server");
-    await payoutPreflight(data.amount);
     const { data: previous } = await db.from("withdrawals").select("fee_tx").eq("user_id", user.id);
     const used = new Set((previous ?? []).map((row: any) => row.fee_tx));
-    const tx = await findPayment(`fee:${user.id}`, WITHDRAW_FEE_GRAM * 1e9, 8, used);
+    const tx = await findPayment(`fee:${user.id}`, WITHDRAW_FEE_GRAM * 1e9, 8, used, PAYOUT_WALLET);
     if (!tx) throw new Error("Fee payment not found yet. Wait a minute before retrying; do not pay twice.");
     const { data: withdrawalId, error } = await db.rpc("orange_reserve_withdrawal", { p_user_id: user.id, p_amount: data.amount, p_fee: tx.hash, p_address: me.wallet_address });
     if (error) throw new Error(error.message);
@@ -268,7 +267,7 @@ export const verifySubscription = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { RECEIVE_WALLET } = await import("./config");
     const { user, db } = await ctx(data.initData);
-    const r = await fetch(`https://toncenter.com/api/v3/transactions?account=${RECEIVE_WALLET}&limit=100&sort=desc`);
+    const r = await fetch(`https://toncenter.com/api/v3/transactions?account=${account}&limit=100&sort=desc`);
     if (!r.ok) throw new Error(`Blockchain lookup failed [${r.status}]`);
     const j = (await r.json()) as any;
     const tag = `pro:${user.id}`;
@@ -416,7 +415,7 @@ export const checkWithdrawal = createServerFn({ method: "POST" }).inputValidator
   const me = await loadUser(db, user.id);
   if (!Number.isFinite(data.amount) || data.amount < MIN_WITHDRAW || data.amount > Number(me.balance)) throw new Error("Not enough ORAI or below minimum withdrawal");
   const { payoutPreflight } = await import("./payout.server");
-  await payoutPreflight(data.amount);
+  await payoutPreflight(data.amount, false);
   return { ok: true };
 });
 

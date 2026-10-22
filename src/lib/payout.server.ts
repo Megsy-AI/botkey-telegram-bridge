@@ -27,10 +27,10 @@ async function oraiJettonWallet(owner: string) {
 }
 
 /** Sends ORAI from the payout wallet to a user address. */
-export async function payoutPreflight(amount: number) {
+export async function payoutPreflight(amount: number, needGas = true) {
   const { contract } = await payoutWallet();
   const balance = await contract.getBalance();
-  if (balance < toNano("0.07")) throw new Error("Payout wallet needs network fees");
+  if (needGas && balance < toNano("0.07")) throw new Error("Payout wallet needs network fees");
   const r = await fetch(`https://toncenter.com/api/v3/jetton/wallets?owner_address=${PAYOUT_WALLET}&jetton_address=${ORAI_JETTON}&limit=1`);
   if (!r.ok) throw new Error("Payout balance check unavailable");
   const j = await r.json() as any;

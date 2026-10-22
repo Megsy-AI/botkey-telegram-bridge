@@ -8,7 +8,7 @@ import banner from "@/assets/wallet-banner.jpg";
 const sameAddr = (a?: string | null, b?: string | null) => { if (!a || !b) return false; try { return Address.parse(a).equals(Address.parse(b)); } catch { return a === b; } };
 import { useStore } from "@/lib/store";
 import { getMarket, walletBalances, setWallet, requestWithdraw, checkWithdrawal, walletChallenge, proveWallet } from "@/lib/api.functions";
-import { MIN_WITHDRAW, RECEIVE_WALLET, WITHDRAW_FEE_GRAM } from "@/lib/config";
+import { MIN_WITHDRAW, PAYOUT_WALLET, RECEIVE_WALLET, WITHDRAW_FEE_GRAM } from "@/lib/config";
 import { commentPayload, fmt, oraiTransferMessage } from "@/lib/ton";
 import { CoinIcon, GhostButton, GRAM_ICON, ORAI_ICON, PrimaryButton } from "@/components/ui-kit";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -55,7 +55,7 @@ function WalletPage() {
        await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [msg] }); toast(t("pending"));
      } else {
        await checkWithdrawal({ data: { initData, amount: n } });
-       await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [{ address: RECEIVE_WALLET, amount: toNano(String(WITHDRAW_FEE_GRAM)).toString(), payload: commentPayload(`fee:${me.id}`) }] });
+       await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [{ address: PAYOUT_WALLET, amount: toNano(String(WITHDRAW_FEE_GRAM)).toString(), payload: commentPayload(`fee:${me.id}`) }] });
        toast(t("pending")); const result = await requestWithdraw({ data: { initData, amount: n } }); patchMe({ balance: result.balance }); await refresh(); toast(t("pending"));
      }
      setAmount(""); setMode(null);
