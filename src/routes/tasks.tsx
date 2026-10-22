@@ -43,9 +43,9 @@ function Tasks() {
   const me = data.me;
   const link = `https://t.me/${BOT_USERNAME}?start=ref_${me.id}`;
   const pending = data.tasks.filter((task: any) => !data.done.includes(task.id));
-  const apps = new Map<string, { name: string; image?: string; tasks: any[] }>();
+  const apps = new Map<string, { name: string; image: string | null; tasks: any[] }>();
   for (const task of pending) if (task.app_name) {
-    const a = apps.get(task.app_name) ?? { name: task.app_name, image: task.app_image || task.image_url, tasks: [] };
+    const a = apps.get(task.app_name) ?? { name: task.app_name, image: task.app_image || task.image_url, tasks: [] as any[] };
     a.tasks.push(task); apps.set(task.app_name, a);
   }
   const shown = app ? (apps.get(app)?.tasks ?? []) : pending.filter((task: any) => !task.app_name);
