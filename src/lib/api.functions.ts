@@ -359,8 +359,8 @@ export const buyNft = createServerFn({ method: "POST" })
     if (error) throw new Error("This payment was already used");
     await syncPower(db, user.id);
     try {
-      const { mintNft } = await import("./payout.server");
-      await mintNft(NFT_COLLECTION_ADDRESS, itemIndex, me.wallet_address);
+      const { getgemsMint } = await import("./getgems.server");
+      await getgemsMint(`nft-${tx.hash}`.slice(0, 100), me.wallet_address, tier.tier);
       await db.from("nfts").update({ mint_status: "submitted" }).eq("tx_hash", tx.hash);
     } catch (e) { console.error("NFT mint deferred:", e); }
     return { itemIndex, tier: tier.tier };
@@ -425,16 +425,15 @@ export const adminMintPending = createServerFn({ method: "POST" })
   .inputValidator((i: Auth) => auth(i))
   .handler(async ({ data }) => {
     const { db } = await adminCtx(data.initData);
-    const { data: rows } = await db.from("nfts").select("id,item_index,user_id").eq("mint_status", "pending").order("item_index");
-    const { mintNft } = await import("./payout.server");
+    const { data: rows } = await db.from("nfts").select("id,item_index,user_id,tier,tx_hash").eq("mint_status", "pending").order("item_index");
+    const { getgemsMint } = await import("./getgems.server");
     let minted = 0;
     for (const n of rows ?? []) {
       const { data: u } = await db.from("tg_users").select("wallet_address").eq("id", n.user_id).single();
       if (!u?.wallet_address) continue;
-      await mintNft(NFT_COLLECTION_ADDRESS, n.item_index ?? 0, u.wallet_address);
+      await getgemsMint(`nft-${n.tx_hash ?? n.id}`.slice(0, 100), u.wallet_address, n.tier ?? 1);
       await db.from("nfts").update({ mint_status: "submitted" }).eq("id", n.id);
       minted++;
-      await new Promise(r => setTimeout(r, 8000));
     }
     return { minted, pending: (rows?.length ?? 0) - minted };
   });
