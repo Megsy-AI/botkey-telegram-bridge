@@ -154,10 +154,10 @@ export const verifyHoldings = createServerFn({ method: "POST" })
   });
 
 /** Polls the receive wallet for an on-chain payment carrying a specific comment. */
-async function findPayment(tag: string, minValue: number, attempts = 8, used = new Set<unknown>()) {
+async function findPayment(tag: string, minValue: number, attempts = 8, used = new Set<unknown>(), account: string = RECEIVE_WALLET) {
   for (let i = 0; i < attempts; i++) {
     try {
-      const r = await fetch(`https://toncenter.com/api/v3/transactions?account=${RECEIVE_WALLET}&limit=100&sort=desc`);
+      const r = await fetch(`https://toncenter.com/api/v3/transactions?account=${account}&limit=100&sort=desc`);
       if (r.ok) {
         const j = (await r.json()) as any;
         const tx = (j.transactions ?? []).find((t: any) =>
@@ -181,10 +181,9 @@ export const requestWithdraw = createServerFn({ method: "POST" })
     const { data: pending } = await db.from("withdrawals").select("id").eq("user_id", user.id).in("status", ["pending", "submitted"]).limit(1);
     if (pending?.length) throw new Error("Your earlier withdrawal is still being confirmed");
     const { sendOrai, payoutPreflight } = await import("./payout.server");
-    await payoutPreflight(data.amount);
     const { data: previous } = await db.from("withdrawals").select("fee_tx").eq("user_id", user.id);
     const used = new Set((previous ?? []).map((row: any) => row.fee_tx));
-    const tx = await findPayment(`fee:${user.id}`, WITHDRAW_FEE_GRAM * 1e9, 8, used);
+    const tx = await findPayment(`fee:${user.id}`, WITHDRAW_FEE_GRAM * 1e9, 8, used, PAYOUT_WALLET);
     if (!tx) throw new Error("Fee payment not found yet. Wait a minute before retrying; do not pay twice.");
     const { data: withdrawalId, error } = await db.rpc("orange_reserve_withdrawal", { p_user_id: user.id, p_amount: data.amount, p_fee: tx.hash, p_address: me.wallet_address });
     if (error) throw new Error(error.message);
@@ -314,8 +313,9 @@ export const adminOverview = createServerFn({ method: "POST" })
   });
 
 export const adminAddTask = createServerFn({ method: "POST" })
-  .inputValidator((i: Auth & { title: string; link: string; reward: number }) => ({
+  .inputValidator((i: Auth & { title: string; link: string; reward: number; appName?: string; image?: string }) => ({
     ...auth(i), title: String(i.title).slice(0, 120), link: String(i.link).slice(0, 300), reward: Number(i.reward),
+    appName: String(i.appName ?? "").trim().slice(0, 60), image: String(i.image ?? "").slice(0, 120000),
   }))
   .handler(async ({ data }) => {
     const { db } = await adminCtx(data.initData);
@@ -324,7 +324,8 @@ export const adminAddTask = createServerFn({ method: "POST" })
     const kind = /ston\.fi/i.test(data.link) ? "ston" : priv ? "channel" : "link";
     const { translateTitle } = await import("./translate.server");
     const title_i18n = await translateTitle(data.title);
-    const { error } = await db.from("tasks").insert({ title: data.title, link: data.link, reward: data.reward, kind, chat_id: priv ? `-100${priv[1]}` : null, title_i18n });
+    const { error } = await db.from("tasks").insert({ title: data.title, link: data.link, reward: data.reward, kind, chat_id: priv ? `-100${priv[1]}` : null, title_i18n,
+      app_name: data.appName || null, app_image: data.image || null, image_url: data.image || null });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -359,8 +360,8 @@ export const buyNft = createServerFn({ method: "POST" })
     if (error) throw new Error("This payment was already used");
     await syncPower(db, user.id);
     try {
-      const { mintNft } = await import("./payout.server");
-      await mintNft(NFT_COLLECTION_ADDRESS, itemIndex, me.wallet_address);
+      const { getgemsMint } = await import("./getgems.server");
+      await getgemsMint(`nft-${tx.hash}`.slice(0, 100), me.wallet_address, tier.tier);
       await db.from("nfts").update({ mint_status: "submitted" }).eq("tx_hash", tx.hash);
     } catch (e) { console.error("NFT mint deferred:", e); }
     return { itemIndex, tier: tier.tier };
@@ -416,7 +417,7 @@ export const checkWithdrawal = createServerFn({ method: "POST" }).inputValidator
   const me = await loadUser(db, user.id);
   if (!Number.isFinite(data.amount) || data.amount < MIN_WITHDRAW || data.amount > Number(me.balance)) throw new Error("Not enough ORAI or below minimum withdrawal");
   const { payoutPreflight } = await import("./payout.server");
-  await payoutPreflight(data.amount);
+  await payoutPreflight(data.amount, false);
   return { ok: true };
 });
 
@@ -425,16 +426,15 @@ export const adminMintPending = createServerFn({ method: "POST" })
   .inputValidator((i: Auth) => auth(i))
   .handler(async ({ data }) => {
     const { db } = await adminCtx(data.initData);
-    const { data: rows } = await db.from("nfts").select("id,item_index,user_id").eq("mint_status", "pending").order("item_index");
-    const { mintNft } = await import("./payout.server");
+    const { data: rows } = await db.from("nfts").select("id,item_index,user_id,tier,tx_hash").eq("mint_status", "pending").order("item_index");
+    const { getgemsMint } = await import("./getgems.server");
     let minted = 0;
     for (const n of rows ?? []) {
       const { data: u } = await db.from("tg_users").select("wallet_address").eq("id", n.user_id).single();
       if (!u?.wallet_address) continue;
-      await mintNft(NFT_COLLECTION_ADDRESS, n.item_index ?? 0, u.wallet_address);
+      await getgemsMint(`nft-${n.tx_hash ?? n.id}`.slice(0, 100), u.wallet_address, n.tier ?? 1);
       await db.from("nfts").update({ mint_status: "submitted" }).eq("id", n.id);
       minted++;
-      await new Promise(r => setTimeout(r, 8000));
     }
     return { minted, pending: (rows?.length ?? 0) - minted };
   });

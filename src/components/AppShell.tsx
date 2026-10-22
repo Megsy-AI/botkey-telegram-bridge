@@ -4,6 +4,7 @@ import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import { House, Gift, Gauge, Wallet, CircleUserRound } from "lucide-react";
 import { StoreProvider, useStore } from "@/lib/store";
 import { getWebApp } from "@/lib/telegram";
+import { Toaster } from "@/components/ui/sonner";
 import logo from "@/assets/orai-logo.png.asset.json";
 
 const tabs = [
@@ -72,6 +73,8 @@ export default function AppShell() {
       <StoreProvider>
         <BackButtonSync />
         <Frame />
+        <Toaster position="top-center" offset={14} duration={2600} visibleToasts={1}
+          toastOptions={{ unstyled: true, classNames: { toast: "glass-strong mx-auto flex w-[calc(100vw-40px)] max-w-sm items-center gap-3 rounded-[22px] px-4 py-3 text-sm font-bold text-foreground shadow-lg", description: "text-xs font-medium text-muted-foreground", icon: "text-primary" } }} />
       </StoreProvider>
     </TonConnectUIProvider>
   );

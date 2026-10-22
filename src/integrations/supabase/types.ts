@@ -97,6 +97,8 @@ export type Database = {
       tasks: {
         Row: {
           active: boolean
+          app_image: string | null
+          app_name: string | null
           chat_id: string | null
           created_at: string
           id: string
@@ -110,6 +112,8 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          app_image?: string | null
+          app_name?: string | null
           chat_id?: string | null
           created_at?: string
           id?: string
@@ -123,6 +127,8 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          app_image?: string | null
+          app_name?: string | null
           chat_id?: string | null
           created_at?: string
           id?: string

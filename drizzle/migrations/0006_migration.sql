@@ -1,0 +1,1 @@
+alter table public.tasks add column if not exists app_name text, add column if not exists app_image text;

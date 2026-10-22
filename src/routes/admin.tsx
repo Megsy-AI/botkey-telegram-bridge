@@ -59,6 +59,19 @@ function AdminPage() {
   const [link, setLink] = useState("");
   const [reward, setReward] = useState("");
   const [busy, setBusy] = useState(false);
+  const [appName, setAppName] = useState("");
+  const [image, setImage] = useState("");
+  function pickImage(f?: File) {
+    if (!f) return;
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas"); c.width = c.height = 160;
+      const k = Math.max(160 / img.width, 160 / img.height);
+      c.getContext("2d")!.drawImage(img, (160 - img.width * k) / 2, (160 - img.height * k) / 2, img.width * k, img.height * k);
+      setImage(c.toDataURL("image/jpeg", 0.85)); URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(f);
+  }
 
   const load = () => adminOverview({ data: { initData } }).then(setOv).catch((e) => toast.error(e.message));
   useEffect(() => { if (data?.isAdmin) load(); }, [data?.isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -71,8 +84,8 @@ function AdminPage() {
     if (!title || !(Number(reward) > 0)) return;
     setBusy(true);
     try {
-      await adminAddTask({ data: { initData, title, link, reward: Number(reward) } });
-      setTitle(""); setLink(""); setReward("");
+      await adminAddTask({ data: { initData, title, link, reward: Number(reward), appName, image } });
+      setTitle(""); setLink(""); setReward(""); setImage("");
       await load();
       toast.success(t("done"));
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
@@ -111,7 +124,14 @@ function AdminPage() {
         <input value={link} onChange={(e) => setLink(e.target.value)} placeholder={t("taskLink")}
           className="mb-2 h-12 w-full rounded-2xl bg-card px-4 outline-none placeholder:text-muted-foreground" />
         <input inputMode="decimal" value={reward} onChange={(e) => setReward(e.target.value.replace(/[^0-9.]/g, ""))} placeholder={t("taskReward")}
-          className="mb-3 h-12 w-full rounded-2xl bg-card px-4 outline-none placeholder:text-muted-foreground" />
+          className="mb-2 h-12 w-full rounded-2xl bg-card px-4 outline-none placeholder:text-muted-foreground" />
+        <input value={appName} onChange={(e) => setAppName(e.target.value)} placeholder="App name (optional)"
+          className="mb-2 h-12 w-full rounded-2xl bg-card px-4 outline-none placeholder:text-muted-foreground" />
+        <label className="mb-3 flex h-14 w-full cursor-pointer items-center gap-3 rounded-2xl bg-card px-3 font-bold text-muted-foreground">
+          {image ? <img src={image} alt="" className="size-10 rounded-xl object-cover" /> : <span className="flex size-10 items-center justify-center rounded-xl bg-accent text-primary">+</span>}
+          <span className="text-sm">Task image</span>
+          <input type="file" accept="image/*" className="hidden" onChange={(e) => pickImage(e.target.files?.[0])} />
+        </label>
         <PrimaryButton onClick={addTask} disabled={busy}>{t("save")}</PrimaryButton>
       </Card>
       <NftOwnerCard />

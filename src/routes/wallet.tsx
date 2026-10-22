@@ -8,7 +8,7 @@ import banner from "@/assets/wallet-banner.jpg";
 const sameAddr = (a?: string | null, b?: string | null) => { if (!a || !b) return false; try { return Address.parse(a).equals(Address.parse(b)); } catch { return a === b; } };
 import { useStore } from "@/lib/store";
 import { getMarket, walletBalances, setWallet, requestWithdraw, checkWithdrawal, walletChallenge, proveWallet } from "@/lib/api.functions";
-import { MIN_WITHDRAW, RECEIVE_WALLET, WITHDRAW_FEE_GRAM } from "@/lib/config";
+import { MIN_WITHDRAW, PAYOUT_WALLET, RECEIVE_WALLET, WITHDRAW_FEE_GRAM } from "@/lib/config";
 import { commentPayload, fmt, oraiTransferMessage } from "@/lib/ton";
 import { CoinIcon, GhostButton, GRAM_ICON, ORAI_ICON, PrimaryButton } from "@/components/ui-kit";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -23,8 +23,8 @@ function WalletPage() {
  const triedProof = useRef<string | null>(null);
  useEffect(() => { if (!demo) getMarket({ data: { initData } }).then(setMarket).catch(() => {}); }, [demo, initData]);
  useEffect(() => {
-   if (!address || demo) { setChain(null); return; }
-   walletBalances({ data: { initData, address } }).then(setChain).catch(() => {});
+   if (!address || demo) return;
+   walletBalances({ data: { initData, address } }).then((c) => { if (c) setChain(c); }).catch(() => {});
    const proof = wallet?.connectItems?.tonProof;
    if (proof && "proof" in proof) {
      // Automatic verification: attempt each proof once, silently.
@@ -35,7 +35,7 @@ function WalletPage() {
    } else if (!sameAddr(address, data?.me.wallet_address)) {
      setWallet({ data: { initData, address } }).then(() => patchMe({ wallet_address: address, wallet_verified: false })).catch(() => {});
    }
- }, [address, demo, initData, wallet]);
+ }, [address, demo, initData, wallet?.account?.address, wallet?.connectItems?.tonProof]);
  if (!data) return null;
  const me = data.me;
  async function connect() {
@@ -55,7 +55,7 @@ function WalletPage() {
        await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [msg] }); toast(t("pending"));
      } else {
        await checkWithdrawal({ data: { initData, amount: n } });
-       await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [{ address: RECEIVE_WALLET, amount: toNano(String(WITHDRAW_FEE_GRAM)).toString(), payload: commentPayload(`fee:${me.id}`) }] });
+       await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [{ address: PAYOUT_WALLET, amount: toNano(String(WITHDRAW_FEE_GRAM)).toString(), payload: commentPayload(`fee:${me.id}`) }] });
        toast(t("pending")); const result = await requestWithdraw({ data: { initData, amount: n } }); patchMe({ balance: result.balance }); await refresh(); toast(t("pending"));
      }
      setAmount(""); setMode(null);
@@ -63,7 +63,7 @@ function WalletPage() {
  }
  const linked = !!address;
  const usd = market?.orai.priceUsd ? Number(me.balance) * market.orai.priceUsd : null;
- const assets = [{ s: "ORAI", name: market?.orai.name || "Orange AI", icon: ORAI_ICON, price: market?.orai.priceUsd, balance: chain?.orai }, { s: "GRAM", name: "Gram", icon: GRAM_ICON, price: market?.gram.priceUsd, balance: chain?.gram }];
+ const assets = [{ s: "ORAI", name: market?.orai.name || "Orange AI", icon: ORAI_ICON, price: market?.orai.priceUsd, balance: Number(me.balance) + (chain?.orai ?? 0) }, { s: "GRAM", name: "Gram", icon: GRAM_ICON, price: market?.gram.priceUsd, balance: chain?.gram }];
  return <div className="space-y-5">
      <div className="relative overflow-hidden rounded-3xl bg-primary text-primary-foreground">
      <img src={banner} alt="" width={1376} height={768} className="absolute inset-0 h-full w-full object-cover object-right" />
