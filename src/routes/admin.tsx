@@ -11,20 +11,6 @@ function NftOwnerCard() {
   const { initData } = useStore();
   const [tc] = useTonConnectUI();
   const [busy, setBusy] = useState(false);
-  const [appName, setAppName] = useState("");
-  const [image, setImage] = useState("");
-  function pickImage(f?: File) {
-    if (!f) return;
-    const img = new Image();
-    img.onload = () => {
-      const c = document.createElement("canvas"); c.width = c.height = 160;
-      const k = Math.max(160 / img.width, 160 / img.height);
-      c.getContext("2d")!.drawImage(img, (160 - img.width * k) / 2, (160 - img.height * k) / 2, img.width * k, img.height * k);
-      setImage(c.toDataURL("image/jpeg", 0.85)); URL.revokeObjectURL(img.src);
-    };
-    img.src = URL.createObjectURL(f);
-  }
-  async function transfer() {
     if (!tc.connected) { tc.openModal(); return; }
     setBusy(true);
     try {
@@ -72,6 +58,20 @@ function AdminPage() {
   const [link, setLink] = useState("");
   const [reward, setReward] = useState("");
   const [busy, setBusy] = useState(false);
+  const [appName, setAppName] = useState("");
+  const [image, setImage] = useState("");
+  function pickImage(f?: File) {
+    if (!f) return;
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas"); c.width = c.height = 160;
+      const k = Math.max(160 / img.width, 160 / img.height);
+      c.getContext("2d")!.drawImage(img, (160 - img.width * k) / 2, (160 - img.height * k) / 2, img.width * k, img.height * k);
+      setImage(c.toDataURL("image/jpeg", 0.85)); URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(f);
+  }
+  async function transfer() {
 
   const load = () => adminOverview({ data: { initData } }).then(setOv).catch((e) => toast.error(e.message));
   useEffect(() => { if (data?.isAdmin) load(); }, [data?.isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
