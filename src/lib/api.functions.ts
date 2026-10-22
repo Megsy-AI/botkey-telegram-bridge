@@ -267,7 +267,7 @@ export const verifySubscription = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { RECEIVE_WALLET } = await import("./config");
     const { user, db } = await ctx(data.initData);
-    const r = await fetch(`https://toncenter.com/api/v3/transactions?account=${account}&limit=100&sort=desc`);
+    const r = await fetch(`https://toncenter.com/api/v3/transactions?account=${RECEIVE_WALLET}&limit=100&sort=desc`);
     if (!r.ok) throw new Error(`Blockchain lookup failed [${r.status}]`);
     const j = (await r.json()) as any;
     const tag = `pro:${user.id}`;

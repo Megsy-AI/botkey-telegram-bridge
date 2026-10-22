@@ -23,8 +23,8 @@ function WalletPage() {
  const triedProof = useRef<string | null>(null);
  useEffect(() => { if (!demo) getMarket({ data: { initData } }).then(setMarket).catch(() => {}); }, [demo, initData]);
  useEffect(() => {
-   if (!address || demo) { setChain(null); return; }
-   walletBalances({ data: { initData, address } }).then(setChain).catch(() => {});
+   if (!address || demo) return;
+   walletBalances({ data: { initData, address } }).then((c) => { if (c) setChain(c); }).catch(() => {});
    const proof = wallet?.connectItems?.tonProof;
    if (proof && "proof" in proof) {
      // Automatic verification: attempt each proof once, silently.
@@ -35,7 +35,7 @@ function WalletPage() {
    } else if (!sameAddr(address, data?.me.wallet_address)) {
      setWallet({ data: { initData, address } }).then(() => patchMe({ wallet_address: address, wallet_verified: false })).catch(() => {});
    }
- }, [address, demo, initData, wallet]);
+ }, [address, demo, initData, wallet?.account?.address, wallet?.connectItems?.tonProof]);
  if (!data) return null;
  const me = data.me;
  async function connect() {
@@ -63,7 +63,7 @@ function WalletPage() {
  }
  const linked = !!address;
  const usd = market?.orai.priceUsd ? Number(me.balance) * market.orai.priceUsd : null;
- const assets = [{ s: "ORAI", name: market?.orai.name || "Orange AI", icon: ORAI_ICON, price: market?.orai.priceUsd, balance: chain?.orai }, { s: "GRAM", name: "Gram", icon: GRAM_ICON, price: market?.gram.priceUsd, balance: chain?.gram }];
+ const assets = [{ s: "ORAI", name: market?.orai.name || "Orange AI", icon: ORAI_ICON, price: market?.orai.priceUsd, balance: Number(me.balance) + (chain?.orai ?? 0) }, { s: "GRAM", name: "Gram", icon: GRAM_ICON, price: market?.gram.priceUsd, balance: chain?.gram }];
  return <div className="space-y-5">
      <div className="relative overflow-hidden rounded-3xl bg-primary text-primary-foreground">
      <img src={banner} alt="" width={1376} height={768} className="absolute inset-0 h-full w-full object-cover object-right" />
