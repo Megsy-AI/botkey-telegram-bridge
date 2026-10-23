@@ -51,7 +51,7 @@ export const Route = createFileRoute("/api/public/jobs/bot")({ server: { handler
   const list = users ?? [];
   for (let i = 0; i < list.length; i += 25) {
     const res = await Promise.all(list.slice(i, i + 25).map((u: any) => {
-      const [text, btn] = MSG[pickLang(u.language_code) as string] ?? MSG.en!;
+      const [text, btn] = MSG[pickLang(u.language_code) as string] ?? MSG['en']!;
       return tg(token, "sendPhoto", { chat_id: u.id, photo: BANNER, caption: text, parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: btn, web_app: { url: APP } }]] } });
     }));
     sent += res.filter((r) => r.ok).length;
