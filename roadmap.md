@@ -59,3 +59,6 @@
 - [ ] Wallet balance flicker + mined coins not showing
 - [ ] Android-style top notifications
 - [ ] In-app real ORAI buy through DEX pool (needs owner decision on liquidity pool)
+- [ ] Save every /start user in DB even without opening app
+- [ ] Broadcast bot message every 4 hours
+- [ ] Fix automatic channel posts
