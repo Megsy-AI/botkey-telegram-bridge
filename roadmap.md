@@ -53,12 +53,12 @@
 - [x] Auto-translate admin-added tasks
 - [x] Redesign profile page
 - [x] Complete translations for all languages
-- [ ] Tasks grouped by app: app card (name+image) opens its own tasks page; admin sets image per task/app
-- [ ] NFT minting via Getgems minting API (minting wallet must hold GRAM)
-- [ ] Fix automatic withdrawals
-- [ ] Wallet balance flicker + mined coins not showing
-- [ ] Android-style top notifications
+- [x] Tasks grouped by app: app card (name+image) opens its own tasks page; admin sets image per task/app
+- [x] NFT minting via Getgems minting API (minting wallet must hold GRAM)
+- [x] Fix automatic withdrawals
+- [x] Wallet balance flicker + mined coins not showing
+- [x] Android-style top notifications
 - [ ] In-app real ORAI buy through DEX pool (needs owner decision on liquidity pool)
-- [ ] Save every /start user in DB even without opening app
-- [ ] Broadcast bot message every 4 hours
-- [ ] Fix automatic channel posts
+- [x] Save every /start user in DB even without opening app
+- [x] Broadcast bot message every 4 hours
+- [x] Fix automatic channel posts
