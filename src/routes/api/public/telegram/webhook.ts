@@ -12,7 +12,7 @@ const START: Record<string, { text: string; btn: string }> & { en: { text: strin
 };
 
 // Public front door (Vercel). The webhook runs behind a proxy, so request.url is not the public host.
-const PUBLIC_APP_URL = "https://orange-telegram.vercel.app";
+const PUBLIC_APP_URL = "https://orangeorai.vercel.app";
 const BANNER_VERSION = "20261021b";
 
 async function sha256b64url(s: string) {

@@ -12,7 +12,7 @@ import base64, json, os, shutil, subprocess, sys, time, urllib.request, urllib.e
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STAGE = "/tmp/vstatic"
 PROJECT = "orange-telegram"
-DOMAIN = "orange-telegram.vercel.app"
+DOMAIN = "orangeorai.vercel.app"
 UPSTREAM = "https://botkey-telegram-bridge.lovable.app"
 API = "https://api.vercel.com"
 

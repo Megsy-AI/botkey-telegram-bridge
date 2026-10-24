@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
 import { pickLang } from "@/lib/i18n";
 
-const APP = "https://orange-telegram.vercel.app";
+const APP = "https://orangeorai.vercel.app";
 const CHANNEL = "-1002616088306";
 const BANNER = `${APP}/start-banner.jpg?v=20261021b`;
 const MSG: Record<string, [string, string]> = {
