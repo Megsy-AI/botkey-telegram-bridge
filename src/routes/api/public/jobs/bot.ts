@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
 import { pickLang } from "@/lib/i18n";
 
-const APP = "https://orange-telegram.vercel.app";
+const APP = "https://orangeorai.vercel.app";
 const CHANNEL = "-1002616088306";
 const BANNER = `${APP}/start-banner.jpg?v=20261021b`;
 const MSG: Record<string, [string, string]> = {
@@ -37,8 +37,10 @@ export const Route = createFileRoute("/api/public/jobs/bot")({ server: { handler
   if (!token) return new Response("Not configured", { status: 500 });
   const body = (await request.json().catch(() => ({}))) as { kind?: string };
 
-  if (body.kind === "channel") {
-    const text = await channelText();
+  if (body.kind === "channel" || body.kind === "staking") {
+    const text = body.kind === "staking"
+      ? "Orange Staking: your mining power grows with the ORAI you hold.\n\nHold ORAI in the app or in your verified wallet and your level rises automatically. Every level pays half of its value per day in ORAI.\n\nHold $10 and earn $5 a day. Hold $50 and earn $25 a day. Hold $100 and earn $50 a day.\n\nLevels start at $0.10 and go up to $10,000. Open Orange, connect your wallet and start staking."
+      : await channelText();
     const j = await tg(token, "sendPhoto", { chat_id: CHANNEL, photo: BANNER, caption: `<b>${text}</b>`, parse_mode: "HTML",
       reply_markup: { inline_keyboard: [[{ text: "Open app", url: "https://t.me/sramaibot?startapp" }]] } });
     if (!j.ok) console.error("Channel post failed", j.description);

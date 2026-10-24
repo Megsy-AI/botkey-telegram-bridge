@@ -388,7 +388,7 @@ export const proveWallet = createServerFn({ method: "POST" }).inputValidator((i:
   if (!me.wallet_nonce || Date.now() - Number(me.wallet_nonce.split(":")[0]) > 300000) throw new Error("Request a new wallet verification");
   const { getRequest } = await import("@tanstack/react-start/server");
   const { verifyWalletProof } = await import("./wallet-proof.server");
-  const address = await verifyWalletProof(data.address, data.proof, me.wallet_nonce, [new URL(getRequest().url).host, "orange-telegram.vercel.app", "botkey-telegram-bridge.lovable.app"]);
+  const address = await verifyWalletProof(data.address, data.proof, me.wallet_nonce, [new URL(getRequest().url).host, "orangeorai.vercel.app", "botkey-telegram-bridge.lovable.app"]);
   const { data: other } = await db.from("tg_users").select("id").eq("wallet_address", address).eq("wallet_verified", true).neq("id", user.id).limit(1);
   if (other?.length) throw new Error("Wallet already linked to another account");
   const { error } = await db.from("tg_users").update({ wallet_address: address, wallet_verified: true, wallet_nonce: null }).eq("id", user.id).eq("wallet_nonce", me.wallet_nonce);

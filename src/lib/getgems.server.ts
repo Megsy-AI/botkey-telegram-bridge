@@ -1,6 +1,6 @@
 import { NFT_COLLECTION_ADDRESS, NFT_TIERS } from "./config";
 const BASE = `https://api.getgems.io/public-api/minting/${NFT_COLLECTION_ADDRESS}`;
-const IMAGE_BASE = "https://orange-telegram.vercel.app/nft";
+const IMAGE_BASE = "https://orangeorai.vercel.app/nft";
 function headers() {
   const key = process.env["GETGEMS_API_KEY"];
   if (!key) throw new Error("Getgems minting is not configured");
