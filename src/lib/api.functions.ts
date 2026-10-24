@@ -297,16 +297,24 @@ export const adminOverview = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { db } = await adminCtx(data.initData);
     const [users, withdrawals, tasks, nfts] = await Promise.all([
-      db.from("tg_users").select("id, balance"),
+      db.from("tg_users").select("id", { count: "exact", head: true }),
       db.from("withdrawals").select("*").order("created_at", { ascending: false }).limit(50),
       db.from("tasks").select("*").order("sort"),
-      db.from("nfts").select("id"),
+      db.from("nfts").select("id", { count: "exact", head: true }),
     ]);
-    const list = (users.data ?? []) as { balance: number }[];
+    let totalBalance = 0;
+    for (let from = 0; ; from += 1000) {
+      const { data: page } = await db.from("tg_users").select("balance").order("id").range(from, from + 999);
+      for (const u of page ?? []) totalBalance += Number(u.balance);
+      if (!page || page.length < 1000) break;
+    }
     return {
-      users: list.length,
-      totalBalance: list.reduce((s, u) => s + Number(u.balance), 0),
+      users: users.count ?? 0,
+      totalBalance,
       withdrawals: withdrawals.data ?? [],
+      tasks: tasks.data ?? [],
+      nfts: nfts.count ?? 0,
+    };
       tasks: tasks.data ?? [],
       nfts: (nfts.data ?? []).length,
     };
