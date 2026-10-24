@@ -315,9 +315,6 @@ export const adminOverview = createServerFn({ method: "POST" })
       tasks: tasks.data ?? [],
       nfts: nfts.count ?? 0,
     };
-      tasks: tasks.data ?? [],
-      nfts: (nfts.data ?? []).length,
-    };
   });
 
 export const adminAddTask = createServerFn({ method: "POST" })
