@@ -1,6 +1,10 @@
 # Orange — task roadmap
 
 ## Current requests
+- [ ] Repair withdrawal acceptance, automatic processing and accurate balance checks; verify live liquidity and pending transfers.
+- [ ] Broadcast localized purchase encouragement to every registered bot user, with durable delivery tracking.
+- [ ] Add applications first in admin; name/link-only tasks inherit images and expand below the app button.
+- [x] Set channel schedule to two posts daily at 09:00 and 21:00 UTC; remove expired annual one-off.
 - [x] Refresh bot token: getMe identifies @sramaibot; webhook and menu registered; referral links updated.
 - [x] Dedicated referral artwork; remove wallet/tasks titles; ten vertical rectangular NFT showcases and per-tier increase-power buttons. Browser tested at 434×763 and 1280×1800; no runtime errors or overflow. Eleven existing tests pass.
 - [x] Owner-provided https://getgems.io/orangeai above NFT list; receive-wallet royalty address provided.
