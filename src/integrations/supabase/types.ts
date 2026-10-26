@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_campaigns: {
+        Row: {
+          created_at: string
+          failed: number
+          id: string
+          last_user_id: number
+          lease_token: string | null
+          lease_until: string | null
+          max_user_id: number
+          messages: Json
+          pause_reason: string | null
+          sent: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          failed?: number
+          id?: string
+          last_user_id?: number
+          lease_token?: string | null
+          lease_until?: string | null
+          max_user_id: number
+          messages: Json
+          pause_reason?: string | null
+          sent?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          failed?: number
+          id?: string
+          last_user_id?: number
+          lease_token?: string | null
+          lease_until?: string | null
+          max_user_id?: number
+          messages?: Json
+          pause_reason?: string | null
+          sent?: number
+          status?: string
+        }
+        Relationships: []
+      }
       market_snapshots: {
         Row: {
           data: Json
@@ -68,6 +110,45 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_lock: {
+        Row: {
+          expires_at: string | null
+          id: number
+          token: string | null
+        }
+        Insert: {
+          expires_at?: string | null
+          id: number
+          token?: string | null
+        }
+        Update: {
+          expires_at?: string | null
+          id?: number
+          token?: string | null
+        }
+        Relationships: []
+      }
+      task_apps: {
+        Row: {
+          created_at: string
+          id: string
+          image: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image?: string
+          name?: string
+        }
+        Relationships: []
+      }
       task_completions: {
         Row: {
           created_at: string
@@ -97,6 +178,7 @@ export type Database = {
       tasks: {
         Row: {
           active: boolean
+          app_id: string | null
           app_image: string | null
           app_name: string | null
           chat_id: string | null
@@ -112,6 +194,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          app_id?: string | null
           app_image?: string | null
           app_name?: string | null
           chat_id?: string | null
@@ -127,6 +210,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          app_id?: string | null
           app_image?: string | null
           app_name?: string | null
           chat_id?: string | null
@@ -140,7 +224,15 @@ export type Database = {
           title?: string
           title_i18n?: Json
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "task_apps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tg_users: {
         Row: {
@@ -211,6 +303,9 @@ export type Database = {
       withdrawals: {
         Row: {
           amount: number
+          broadcast_boc: string | null
+          broadcast_error: string | null
+          broadcast_seqno: number | null
           created_at: string
           fee_tx: string | null
           id: string
@@ -221,6 +316,9 @@ export type Database = {
         }
         Insert: {
           amount: number
+          broadcast_boc?: string | null
+          broadcast_error?: string | null
+          broadcast_seqno?: number | null
           created_at?: string
           fee_tx?: string | null
           id?: string
@@ -231,6 +329,9 @@ export type Database = {
         }
         Update: {
           amount?: number
+          broadcast_boc?: string | null
+          broadcast_error?: string | null
+          broadcast_seqno?: number | null
           created_at?: string
           fee_tx?: string | null
           id?: string
@@ -246,7 +347,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      orange_campaign_lock: {
+        Args: { p_id: string; p_token: string }
+        Returns: boolean
+      }
       orange_mining_claim: { Args: { p_user_id: number }; Returns: Json }
+      orange_payout_lock: { Args: { p_token: string }; Returns: boolean }
       orange_refund_withdrawal: { Args: { p_id: string }; Returns: undefined }
       orange_reserve_withdrawal: {
         Args: {

@@ -50,6 +50,13 @@
       "when": 1792627764993,
       "tag": "0006_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792973945503,
+      "tag": "0007_task_apps_and_delivery_jobs",
+      "breakpoints": true
     }
   ]
 }
