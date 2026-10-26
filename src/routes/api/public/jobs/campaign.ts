@@ -25,7 +25,7 @@ export const Route = createFileRoute("/api/public/jobs/campaign")({ server: { ha
     // Sequential delivery preserves a precise cursor. An unknown HTTP outcome pauses
     // rather than re-sending a message that Telegram may already have accepted.
     for (const user of users ?? []) {
-      const message = messages[pickLang(user.language_code)] ?? messages.en;
+      const message = messages[pickLang(user.language_code)] ?? messages["en"];
       if (!message) break;
       let result: { ok?: boolean; error_code?: number; description?: string; parameters?: { retry_after?: number } };
       try {
