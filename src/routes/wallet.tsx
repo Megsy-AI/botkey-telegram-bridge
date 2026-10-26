@@ -23,19 +23,22 @@ function WalletPage() {
  const triedProof = useRef<string | null>(null);
  useEffect(() => { if (!demo) getMarket({ data: { initData } }).then(setMarket).catch(() => {}); }, [demo, initData]);
  useEffect(() => {
+   setChain(null);
    if (!address || demo) return;
-   walletBalances({ data: { initData, address } }).then((c) => { if (c) setChain(c); }).catch(() => {});
+   let active = true;
+   const loadBalances = () => walletBalances({ data: { initData, address } }).then(c => { if (active) setChain(c); }).catch(() => {});
+   void loadBalances();
+   const interval = window.setInterval(loadBalances, 30000);
+   window.addEventListener("focus", loadBalances);
    const proof = wallet?.connectItems?.tonProof;
-   if (proof && "proof" in proof) {
-     // Automatic verification: attempt each proof once, silently.
-     if (triedProof.current !== proof.proof.signature) {
-       triedProof.current = proof.proof.signature;
-       proveWallet({ data: { initData, address, proof: proof.proof } }).then((r) => { patchMe({ ...r, wallet_address: r.wallet_address ?? address, wallet_verified: true }); toast.success(t("done")); void refresh(); }).catch((e: any) => toast.error(e.message));
-     }
-   } else if (!sameAddr(address, data?.me.wallet_address)) {
-     setWallet({ data: { initData, address } }).then(() => patchMe({ wallet_address: address, wallet_verified: false })).catch(() => {});
+   if (proof && "proof" in proof && triedProof.current !== proof.proof.signature) {
+     triedProof.current = proof.proof.signature;
+     proveWallet({ data: { initData, address, proof: proof.proof } }).then(r => { if (active) { patchMe(r); void refresh(); } }).catch((e: any) => toast.error(e.message));
+   } else if (!proof && !sameAddr(address, data?.me.wallet_address)) {
+     setWallet({ data: { initData, address } }).then(() => { if (active) patchMe({ wallet_address: address, wallet_verified: false }); }).catch(() => {});
    }
- }, [address, demo, initData, wallet?.account?.address, wallet?.connectItems?.tonProof]);
+   return () => { active = false; window.clearInterval(interval); window.removeEventListener("focus", loadBalances); };
+ }, [address, demo, initData, wallet?.connectItems?.tonProof]);
  if (!data) return null;
  const me = data.me;
  async function connect() {
@@ -54,16 +57,17 @@ function WalletPage() {
        const msg = coin === "GRAM" ? { address: RECEIVE_WALLET, amount: toNano(amount).toString(), payload: commentPayload(`dep:${me.id}`) } : await oraiTransferMessage(address, RECEIVE_WALLET, n, `dep:${me.id}`);
        await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [msg] }); toast(t("pending"));
      } else {
-       await checkWithdrawal({ data: { initData, amount: n } });
-       await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [{ address: PAYOUT_WALLET, amount: toNano(String(WITHDRAW_FEE_GRAM)).toString(), payload: commentPayload(`fee:${me.id}`) }] });
-       toast(t("pending")); const result = await requestWithdraw({ data: { initData, amount: n } }); patchMe({ balance: result.balance }); await refresh(); toast(t("pending"));
+       if (!me.wallet_verified || !sameAddr(address, me.wallet_address)) { await connect(); return; }
+       const preflight = await checkWithdrawal({ data: { initData, amount: n } });
+       if (!preflight.feePaid) await tc.sendTransaction({ validUntil: Math.floor(Date.now() / 1000) + 600, messages: [{ address: PAYOUT_WALLET, amount: toNano(String(WITHDRAW_FEE_GRAM)).toString(), payload: commentPayload(`fee:${me.id}`) }] });
+       toast(t("pending")); const result = await requestWithdraw({ data: { initData, amount: n } }); patchMe({ balance: result.balance }); await refresh(); walletBalances({ data: { initData, address } }).then(setChain).catch(() => {}); toast(t("pending"));
      }
      setAmount(""); setMode(null);
    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
  }
  const linked = !!address;
  const usd = market?.orai.priceUsd ? Number(me.balance) * market.orai.priceUsd : null;
- const assets = [{ s: "ORAI", name: market?.orai.name || "Orange AI", icon: ORAI_ICON, price: market?.orai.priceUsd, balance: Number(me.balance) + (chain?.orai ?? 0) }, { s: "GRAM", name: "Gram", icon: GRAM_ICON, price: market?.gram.priceUsd, balance: chain?.gram }];
+ const assets = [{ s: "ORAI", name: market?.orai.name || "Orange AI", icon: ORAI_ICON, price: market?.orai.priceUsd, balance: chain?.orai }, { s: "GRAM", name: "Gram", icon: GRAM_ICON, price: market?.gram.priceUsd, balance: chain?.gram }];
  return <div className="space-y-5">
      <div className="relative overflow-hidden rounded-3xl bg-primary text-primary-foreground">
      <img src={banner} alt="" width={1376} height={768} className="absolute inset-0 h-full w-full object-cover object-right" />

@@ -48,7 +48,7 @@ function Tasks() {
     const a = apps.get(task.app_name) ?? { name: task.app_name, image: task.app_image || task.image_url, tasks: [] as any[] };
     a.tasks.push(task); apps.set(task.app_name, a);
   }
-  const shown = app ? (apps.get(app)?.tasks ?? []) : pending.filter((task: any) => !task.app_name);
+  const shown = pending.filter((task: any) => !task.app_name);
 
   async function claim(task: any, silent = false) {
     if (demo) { toast(t("openInTelegram")); return; }
@@ -79,23 +79,23 @@ function Tasks() {
         pending.length === 0
           ? <div className="rounded-2xl bg-card py-12 text-center text-sm font-bold text-muted-foreground">{x("allDone")}</div>
           : <div className="space-y-3">
-            {app ? (
-              <button onClick={() => setApp(null)} className="flex w-full items-center gap-3 rounded-2xl bg-card p-3 text-start">
-                <CoinIcon src={apps.get(app)?.image || ORAI_ICON} className="size-12 rounded-2xl" />
-                <div className="min-w-0 flex-1"><div className="truncate text-lg font-bold">{app}</div><div className="text-xs font-bold text-muted-foreground">{shown.length}</div></div>
-                <span className="text-xl font-bold text-muted-foreground">{ar ? "›" : "‹"}</span>
-              </button>
-            ) : apps.size > 0 && (
-              <div className="grid grid-cols-2 gap-3">
-                {[...apps.values()].map((a) => (
-                  <button key={a.name} onClick={() => setApp(a.name)} className="flex flex-col items-center gap-2 rounded-2xl bg-card p-4 transition active:scale-95">
-                    <CoinIcon src={a.image || ORAI_ICON} className="size-14 rounded-2xl" />
-                    <div className="w-full truncate text-center font-bold">{a.name}</div>
-                    <div className="rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-bold text-primary" dir="ltr">{a.tasks.length} · +{fmt(a.tasks.reduce((s, t) => s + Number(t.reward), 0))}</div>
-                  </button>
-                ))}
+            {[...apps.values()].map((a) => (
+              <div key={a.name}>
+                <GhostButton aria-expanded={app === a.name} onClick={() => setApp(app === a.name ? null : a.name)} className="flex h-auto min-h-20 w-full items-center gap-3 p-3 text-start">
+                  <CoinIcon src={a.image || ORAI_ICON} className="size-12" />
+                  <span className="min-w-0 flex-1 truncate font-bold">{a.name}</span>
+                  <span className="text-xs text-muted-foreground">{a.tasks.length}</span>
+                  <span aria-hidden="true">{app === a.name ? "−" : "+"}</span>
+                </GhostButton>
+                {app === a.name && <div className="mt-2 divide-y divide-muted">
+                  {a.tasks.map((task: any) => <div key={task.id} className="flex items-center gap-3 px-2 py-3">
+                    <CoinIcon src={a.image || ORAI_ICON} className="size-10" />
+                    <span className="min-w-0 flex-1 break-words font-bold">{task.title_i18n?.[lang] || task.title}</span>
+                    <GhostButton onClick={() => onTask(task)} className="shrink-0">{opened[task.id] ? t("claim") : t("start")}</GhostButton>
+                  </div>)}
+                </div>}
               </div>
-            )}
+            ))}
             {shown.length > 0 && <div className="overflow-hidden rounded-2xl bg-card">
             {shown.map((task: any, i: number) => (
               <div key={task.id} className={`flex items-center gap-3 px-4 py-3.5 ${i ? "border-t border-muted" : ""}`}>

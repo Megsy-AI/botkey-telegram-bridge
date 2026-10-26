@@ -25,6 +25,7 @@ import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as WhitepaperRouteImport } from './routes/whitepaper'
 import { Route as ApiPublicJobsBotRouteImport } from './routes/api/public/jobs/bot'
 import { Route as ApiPublicJobsMarketRouteImport } from './routes/api/public/jobs/market'
+import { Route as ApiPublicJobsPayoutsRouteImport } from './routes/api/public/jobs/payouts'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -107,6 +108,11 @@ const ApiPublicJobsMarketRoute = ApiPublicJobsMarketRouteImport.update({
   path: '/api/public/jobs/market',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicJobsPayoutsRoute = ApiPublicJobsPayoutsRouteImport.update({
+  id: '/api/public/jobs/payouts',
+  path: '/api/public/jobs/payouts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/whitepaper': typeof WhitepaperRoute
   '/api/public/jobs/bot': typeof ApiPublicJobsBotRoute
   '/api/public/jobs/market': typeof ApiPublicJobsMarketRoute
+  '/api/public/jobs/payouts': typeof ApiPublicJobsPayoutsRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/whitepaper': typeof WhitepaperRoute
   '/api/public/jobs/bot': typeof ApiPublicJobsBotRoute
   '/api/public/jobs/market': typeof ApiPublicJobsMarketRoute
+  '/api/public/jobs/payouts': typeof ApiPublicJobsPayoutsRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesById {
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/whitepaper': typeof WhitepaperRoute
   '/api/public/jobs/bot': typeof ApiPublicJobsBotRoute
   '/api/public/jobs/market': typeof ApiPublicJobsMarketRoute
+  '/api/public/jobs/payouts': typeof ApiPublicJobsPayoutsRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRouteTypes {
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/whitepaper'
     | '/api/public/jobs/bot'
     | '/api/public/jobs/market'
+    | '/api/public/jobs/payouts'
     | '/api/public/telegram/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/whitepaper'
     | '/api/public/jobs/bot'
     | '/api/public/jobs/market'
+    | '/api/public/jobs/payouts'
     | '/api/public/telegram/webhook'
   id:
     | '__root__'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/whitepaper'
     | '/api/public/jobs/bot'
     | '/api/public/jobs/market'
+    | '/api/public/jobs/payouts'
     | '/api/public/telegram/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -249,6 +261,7 @@ export interface RootRouteChildren {
   WhitepaperRoute: typeof WhitepaperRoute
   ApiPublicJobsBotRoute: typeof ApiPublicJobsBotRoute
   ApiPublicJobsMarketRoute: typeof ApiPublicJobsMarketRoute
+  ApiPublicJobsPayoutsRoute: typeof ApiPublicJobsPayoutsRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
 
@@ -366,6 +379,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicJobsMarketRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/jobs/payouts': {
+      id: '/api/public/jobs/payouts'
+      path: '/api/public/jobs/payouts'
+      fullPath: '/api/public/jobs/payouts'
+      preLoaderRoute: typeof ApiPublicJobsPayoutsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
@@ -393,6 +413,7 @@ const rootRouteChildren: RootRouteChildren = {
   WhitepaperRoute: WhitepaperRoute,
   ApiPublicJobsBotRoute: ApiPublicJobsBotRoute,
   ApiPublicJobsMarketRoute: ApiPublicJobsMarketRoute,
+  ApiPublicJobsPayoutsRoute: ApiPublicJobsPayoutsRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
 export const routeTree = rootRouteImport
