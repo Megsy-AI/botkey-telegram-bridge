@@ -22,3 +22,6 @@
 - Profile is the fifth tab; /swap permanently redirects to /profile. Why: preserve the old published URL while keeping current navigation.
 - Vercel, if enabled, is only a reverse-proxy front door to the Lovable deployment. Why: preserve the managed runtime, Telegram verification and Cloud secrets without exporting privileged credentials.
 - NFT collectible metadata artwork stays separate from rectangular display artwork; referral sharing uses its own imported image. Why: presentation changes must not change minted item metadata.
+- Application records own task images; task creation resolves the selected application server-side. Why: prevent inconsistent task branding.
+- Bot campaigns use durable keyset cursors, leases and pause on unknown delivery outcomes. Why: include every registered recipient without unsafe blind replays.
+- Payout processing persists signed messages before broadcasting and serializes the shared wallet; legacy ambiguous payouts require trace review before re-signing. Why: avoid duplicate transfers and seqno collisions.
