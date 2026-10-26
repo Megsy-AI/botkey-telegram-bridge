@@ -44,7 +44,8 @@ export const bootstrap = createServerFn({ method: "POST" })
     } else {
       await db.from("tg_users").update(profile).eq("id", user.id);
     }
-    await reconcileWithdrawals(db, user.id);
+    const { reconcilePayouts } = await import("./payout-queue.server");
+    await reconcilePayouts(db, user.id);
     await syncPower(db, user.id);
     const [me, tasks, done, refs, wd] = await Promise.all([
       loadUser(db, user.id),
@@ -176,29 +177,23 @@ export const requestWithdraw = createServerFn({ method: "POST" })
     const { user, db } = await ctx(data.initData);
     if (!Number.isFinite(data.amount) || data.amount < MIN_WITHDRAW || data.amount > 1e12) throw new Error(`Minimum is ${MIN_WITHDRAW} ORAI`);
     const me = await loadUser(db, user.id);
-    if (!me.wallet_address) throw new Error("Connect your wallet first");
+    if (!me.wallet_address || !me.wallet_verified) throw new Error("Verify wallet ownership first");
     if (Number(me.balance) < data.amount) throw new Error("Not enough ORAI");
     const { data: pending } = await db.from("withdrawals").select("id").eq("user_id", user.id).in("status", ["pending", "submitted"]).limit(1);
     if (pending?.length) throw new Error("Your earlier withdrawal is still being confirmed");
-    const { sendOrai, payoutPreflight } = await import("./payout.server");
+    const { payoutPreflight } = await import("./payout.server");
+    await payoutPreflight(data.amount, true);
     const { data: previous } = await db.from("withdrawals").select("fee_tx").eq("user_id", user.id);
     const used = new Set((previous ?? []).map((row: any) => row.fee_tx));
     const tx = await findPayment(`fee:${user.id}`, WITHDRAW_FEE_GRAM * 1e9, 8, used, PAYOUT_WALLET);
     if (!tx) throw new Error("Fee payment not found yet. Wait a minute before retrying; do not pay twice.");
     const { data: withdrawalId, error } = await db.rpc("orange_reserve_withdrawal", { p_user_id: user.id, p_amount: data.amount, p_fee: tx.hash, p_address: me.wallet_address });
     if (error) throw new Error(error.message);
-    const queryId = Date.now();
-    await db.from("withdrawals").update({ tx_hash: String(queryId) }).eq("id", withdrawalId);
-    try {
-      await sendOrai(me.wallet_address, data.amount, queryId);
-      await db.from("withdrawals").update({ status: "submitted" }).eq("id", withdrawalId);
-    } catch (error) {
-      // A timeout may happen after broadcasting. Keep the reserved amount for reconciliation,
-      // rather than refunding a transfer that might still land and paying twice.
-      console.error("Withdrawal broadcast requires reconciliation", error);
-    }
-    await syncPower(db, user.id);
-    return { balance: (await loadUser(db, user.id)).balance, status: "submitted" };
+    const { processPayouts } = await import("./payout-queue.server");
+    await processPayouts(db).catch((e: unknown) => console.error("Payout deferred", e));
+    await syncPower(db, user.id).catch((e: unknown) => console.error("Power sync deferred", e));
+    const { data: saved } = await db.from("withdrawals").select("status").eq("id", withdrawalId).single();
+    return { id: withdrawalId, balance: (await loadUser(db, user.id)).balance, status: saved?.status ?? "pending" };
 
   });
 
@@ -252,9 +247,8 @@ export const walletBalances = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await ctx(data.initData);
     const [orai, gram] = await Promise.all([
-      oraiHoldings(data.address).catch(() => 0),
-      fetch(`https://toncenter.com/api/v3/account?address=${encodeURIComponent(data.address)}`)
-        .then((r) => r.json() as Promise<any>).then((j) => Number(j.balance ?? 0) / 1e9).catch(() => 0),
+      oraiHoldings(data.address),
+      gramBalance(data.address),
     ]);
     return { orai, gram };
   });
@@ -296,11 +290,12 @@ export const adminOverview = createServerFn({ method: "POST" })
   .inputValidator(auth)
   .handler(async ({ data }) => {
     const { db } = await adminCtx(data.initData);
-    const [users, withdrawals, tasks, nfts] = await Promise.all([
+    const [users, withdrawals, tasks, nfts, apps] = await Promise.all([
       db.from("tg_users").select("id", { count: "exact", head: true }),
       db.from("withdrawals").select("*").order("created_at", { ascending: false }).limit(50),
       db.from("tasks").select("*").order("sort"),
       db.from("nfts").select("id", { count: "exact", head: true }),
+      db.from("task_apps").select("*").order("created_at"),
     ]);
     let totalBalance = 0;
     for (let from = 0; ; from += 1000) {
@@ -314,23 +309,39 @@ export const adminOverview = createServerFn({ method: "POST" })
       withdrawals: withdrawals.data ?? [],
       tasks: tasks.data ?? [],
       nfts: nfts.count ?? 0,
+      apps: apps.data ?? [],
     };
   });
 
-export const adminAddTask = createServerFn({ method: "POST" })
-  .inputValidator((i: Auth & { title: string; link: string; reward: number; appName?: string; image?: string }) => ({
-    ...auth(i), title: String(i.title).slice(0, 120), link: String(i.link).slice(0, 300), reward: Number(i.reward),
-    appName: String(i.appName ?? "").trim().slice(0, 60), image: String(i.image ?? "").slice(0, 120000),
-  }))
-  .handler(async ({ data }) => {
+export const adminAddApp = createServerFn({ method: "POST" })
+  .inputValidator((i: Auth & { name: string; image: string }) => {
+    const name = String(i.name ?? "").trim().slice(0, 60);
+    const image = String(i.image ?? "");
+    if (!name || !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(image) || image.length > 120000) throw new Error("Invalid application name or image");
+    return { ...auth(i), name, image };
+  }).handler(async ({ data }) => {
     const { db } = await adminCtx(data.initData);
-    if (!data.title || !(data.reward > 0)) throw new Error("Invalid task");
+    const { error } = await db.from("task_apps").insert({ name: data.name, image: data.image });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminAddTask = createServerFn({ method: "POST" })
+  .inputValidator((i: Auth & { title: string; link: string; appId: string }) => {
+    const title = String(i.title ?? "").trim().slice(0, 120);
+    const link = String(i.link ?? "").trim();
+    if (!title || link.length > 300 || new URL(link).protocol !== "https:") throw new Error("Invalid task name or link");
+    return { ...auth(i), title, link, appId: String(i.appId) };
+  }).handler(async ({ data }) => {
+    const { db } = await adminCtx(data.initData);
+    const { data: app, error: appError } = await db.from("task_apps").select("*").eq("id", data.appId).single();
+    if (appError || !app) throw new Error("Select an application first");
     const priv = data.link.match(/t\.me\/c\/(\d+)/);
     const kind = /ston\.fi/i.test(data.link) ? "ston" : priv ? "channel" : "link";
     const { translateTitle } = await import("./translate.server");
     const title_i18n = await translateTitle(data.title);
-    const { error } = await db.from("tasks").insert({ title: data.title, link: data.link, reward: data.reward, kind, chat_id: priv ? `-100${priv[1]}` : null, title_i18n,
-      app_name: data.appName || null, app_image: data.image || null, image_url: data.image || null });
+    const { error } = await db.from("tasks").insert({ title: data.title, link: data.link, reward: 0, kind, chat_id: priv ? `-100${priv[1]}` : null, title_i18n,
+      app_id: app.id, app_name: app.name, app_image: app.image, image_url: app.image });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -396,34 +407,24 @@ export const proveWallet = createServerFn({ method: "POST" }).inputValidator((i:
   const address = await verifyWalletProof(data.address, data.proof, me.wallet_nonce, [new URL(getRequest().url).host, "orangeorai.vercel.app", "botkey-telegram-bridge.lovable.app"]);
   const { data: other } = await db.from("tg_users").select("id").eq("wallet_address", address).eq("wallet_verified", true).neq("id", user.id).limit(1);
   if (other?.length) throw new Error("Wallet already linked to another account");
-  const { error } = await db.from("tg_users").update({ wallet_address: address, wallet_verified: true, wallet_nonce: null }).eq("id", user.id).eq("wallet_nonce", me.wallet_nonce);
+  const { error } = await db.from("tg_users").update({ wallet_address: address, wallet_verified: true, wallet_nonce: null }).eq("id", user.id).eq("wallet_nonce", me.wallet_nonce).select("id").single();
   if (error) throw new Error(error.message);
   return syncPower(db, user.id);
 });
 
-async function reconcileWithdrawals(db: any, id: number) {
-  const { data: pending } = await db.from("withdrawals").select("id,tx_hash,amount,to_address").eq("user_id", id).in("status", ["pending", "submitted"]).limit(20);
-  if (!pending?.length) return;
-  try {
-    const response = await fetch(`https://toncenter.com/api/v3/jetton/transfers?owner_address=${PAYOUT_WALLET}&jetton_master=${ORAI_JETTON}&limit=100`);
-    if (!response.ok) return;
-    const json = await response.json() as any;
-    const { Address } = await import("@ton/core");
-    for (const row of pending) {
-      const transfer = (json.jetton_transfers ?? []).find((t: any) => String(t.query_id) === row.tx_hash && Number(t.amount) / 1e9 === Number(row.amount) && t.destination && Address.parse(t.destination).equals(Address.parse(row.to_address)));
-      if (!transfer) continue;
-      if (transfer.transaction_aborted) await db.rpc("orange_refund_withdrawal", { p_id: row.id });
-      else await db.from("withdrawals").update({ status: "sent", tx_hash: transfer.transaction_hash }).eq("id", row.id);
-    }
-  } catch (error) { console.error("Withdrawal status check failed", error); }
-}
 export const checkWithdrawal = createServerFn({ method: "POST" }).inputValidator((i: Auth & { amount: number }) => ({ ...auth(i), amount: Number(i.amount) })).handler(async ({ data }) => {
   const { user, db } = await ctx(data.initData);
   const me = await loadUser(db, user.id);
   if (!Number.isFinite(data.amount) || data.amount < MIN_WITHDRAW || data.amount > Number(me.balance)) throw new Error("Not enough ORAI or below minimum withdrawal");
   const { payoutPreflight } = await import("./payout.server");
+  if (!me.wallet_address || !me.wallet_verified) throw new Error("Verify wallet ownership first");
+  const { data: pending } = await db.from("withdrawals").select("id").eq("user_id", user.id).in("status", ["pending", "submitted"]).limit(1);
+  if (pending?.length) throw new Error("Your earlier withdrawal is still being confirmed");
   await payoutPreflight(data.amount, false);
-  return { ok: true };
+  const { data: previous } = await db.from("withdrawals").select("fee_tx").eq("user_id", user.id);
+  const used = new Set((previous ?? []).map((row: any) => row.fee_tx));
+  const fee = await findPayment(`fee:${user.id}`, WITHDRAW_FEE_GRAM * 1e9, 1, used, PAYOUT_WALLET);
+  return { ok: true, feePaid: !!fee };
 });
 
 /** Admin: retries minting every paid-but-unminted NFT. */
