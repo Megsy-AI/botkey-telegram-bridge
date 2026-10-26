@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
-import { adminAddTask, adminOverview, adminToggleTask, adminMintPending } from "@/lib/api.functions";
+import { adminAddApp, adminAddTask, adminOverview, adminToggleTask, adminMintPending } from "@/lib/api.functions";
 import { fmt, changeOwnerPayload } from "@/lib/ton";
 import { useTonConnectUI } from "@tonconnect/ui-react";
 import { NFT_COLLECTION_ADDRESS, PAYOUT_WALLET } from "@/lib/config";
@@ -57,7 +57,8 @@ function AdminPage() {
   const [ov, setOv] = useState<Overview | null>(null);
   const [title, setTitle] = useState("");
   const [link, setLink] = useState("");
-  const [reward, setReward] = useState("");
+  const [appId, setAppId] = useState("");
+  const [addingApp, setAddingApp] = useState(false);
   const [busy, setBusy] = useState(false);
   const [appName, setAppName] = useState("");
   const [image, setImage] = useState("");
@@ -67,7 +68,9 @@ function AdminPage() {
     img.onload = () => {
       const c = document.createElement("canvas"); c.width = c.height = 160;
       const k = Math.max(160 / img.width, 160 / img.height);
-      c.getContext("2d")!.drawImage(img, (160 - img.width * k) / 2, (160 - img.height * k) / 2, img.width * k, img.height * k);
+      const context = c.getContext("2d");
+      if (!context) return;
+      context.drawImage(img, (160 - img.width * k) / 2, (160 - img.height * k) / 2, img.width * k, img.height * k);
       setImage(c.toDataURL("image/jpeg", 0.85)); URL.revokeObjectURL(img.src);
     };
     img.src = URL.createObjectURL(f);
@@ -81,11 +84,11 @@ function AdminPage() {
   }
 
   async function addTask() {
-    if (!title || !(Number(reward) > 0)) return;
+    if (!title || !link || !appId) return;
     setBusy(true);
     try {
-      await adminAddTask({ data: { initData, title, link, reward: Number(reward), appName, image } });
-      setTitle(""); setLink(""); setReward(""); setImage("");
+      await adminAddTask({ data: { initData, title, link, appId } });
+      setTitle(""); setLink("");
       await load();
       toast.success(t("done"));
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
@@ -117,23 +120,32 @@ function AdminPage() {
         </Card>
       </div>
 
-      <Card>
-        <div className="mb-2 text-lg">{t("addTask")}</div>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("taskTitle")}
-          className="mb-2 h-12 w-full rounded-2xl bg-card px-4 outline-none placeholder:text-muted-foreground" />
-        <input value={link} onChange={(e) => setLink(e.target.value)} placeholder={t("taskLink")}
-          className="mb-2 h-12 w-full rounded-2xl bg-card px-4 outline-none placeholder:text-muted-foreground" />
-        <input inputMode="decimal" value={reward} onChange={(e) => setReward(e.target.value.replace(/[^0-9.]/g, ""))} placeholder={t("taskReward")}
-          className="mb-2 h-12 w-full rounded-2xl bg-card px-4 outline-none placeholder:text-muted-foreground" />
-        <input value={appName} onChange={(e) => setAppName(e.target.value)} placeholder="App name (optional)"
-          className="mb-2 h-12 w-full rounded-2xl bg-card px-4 outline-none placeholder:text-muted-foreground" />
-        <label className="mb-3 flex h-14 w-full cursor-pointer items-center gap-3 rounded-2xl bg-card px-3 font-bold text-muted-foreground">
-          {image ? <img src={image} alt="" className="size-10 rounded-xl object-cover" /> : <span className="flex size-10 items-center justify-center rounded-xl bg-accent text-primary">+</span>}
-          <span className="text-sm">Task image</span>
-          <input type="file" accept="image/*" className="hidden" onChange={(e) => pickImage(e.target.files?.[0])} />
-        </label>
-        <PrimaryButton onClick={addTask} disabled={busy}>{t("save")}</PrimaryButton>
-      </Card>
+      <section className="space-y-3">
+        <PrimaryButton onClick={() => setAddingApp(v => !v)}>إضافة تطبيق</PrimaryButton>
+        {addingApp && <div className="space-y-3">
+          <input aria-label="اسم التطبيق" value={appName} onChange={e => setAppName(e.target.value)} placeholder="اسم التطبيق" className="h-12 w-full rounded-xl bg-card px-4" />
+          <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-card p-3">
+            {image && <img src={image} alt="" className="size-12 rounded-xl object-cover" />}
+            صورة التطبيق<input type="file" accept="image/*" className="hidden" onChange={e => pickImage(e.target.files?.[0])} />
+          </label>
+          <PrimaryButton disabled={busy || !appName.trim() || !image} onClick={async () => {
+            setBusy(true);
+            try { await adminAddApp({ data: { initData, name: appName, image } }); setAppName(""); setImage(""); setAddingApp(false); await load(); }
+            catch(e) { toast.error(e instanceof Error ? e.message : "Error"); } finally { setBusy(false); }
+          }}>{t("save")}</PrimaryButton>
+        </div>}
+        <label className="block text-sm font-bold" htmlFor="task-app">اختار التطبيق</label>
+        <select id="task-app" value={appId} onChange={e => setAppId(e.target.value)} className="h-12 w-full rounded-xl bg-card px-4">
+          <option value="">اختار التطبيق</option>
+          {(ov?.apps ?? []).map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}
+        </select>
+        {appId && <div className="space-y-3">
+          <h2 className="font-bold">{t("addTask")}</h2>
+          <input aria-label={t("taskTitle")} value={title} onChange={e => setTitle(e.target.value)} placeholder={t("taskTitle")} className="h-12 w-full rounded-xl bg-card px-4" />
+          <input aria-label={t("taskLink")} type="url" value={link} onChange={e => setLink(e.target.value)} placeholder={t("taskLink")} className="h-12 w-full rounded-xl bg-card px-4" />
+          <PrimaryButton onClick={addTask} disabled={busy || !title.trim() || !link}>{t("save")}</PrimaryButton>
+        </div>}
+      </section>
       <NftOwnerCard />
 
       <Card>

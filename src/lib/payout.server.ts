@@ -29,7 +29,11 @@ async function oraiJettonWallet(owner: string) {
 /** Sends ORAI from the payout wallet to a user address. */
 export async function payoutPreflight(amount: number, needGas = true) {
   const { contract } = await payoutWallet();
-  const balance = await contract.getBalance();
+  const response = await fetch(`https://toncenter.com/api/v3/account?address=${encodeURIComponent(PAYOUT_WALLET)}`);
+  if (!response.ok) throw new Error(`Payout balance check unavailable [${response.status}]`);
+  const account = await response.json() as { balance?: string };
+  if (typeof account.balance !== "string") throw new Error("Payout balance check unavailable");
+  const balance = BigInt(account.balance);
   if (needGas && balance < toNano("0.07")) throw new Error("Payout wallet needs network fees");
   const r = await fetch(`https://toncenter.com/api/v3/jetton/wallets?owner_address=${PAYOUT_WALLET}&jetton_address=${ORAI_JETTON}&limit=1`);
   if (!r.ok) throw new Error("Payout balance check unavailable");
@@ -37,12 +41,12 @@ export async function payoutPreflight(amount: number, needGas = true) {
   if (BigInt(j.jetton_wallets?.[0]?.balance ?? "0") < toNano(amount.toFixed(9))) throw new Error("Payout wallet needs ORAI");
 }
 
-export async function sendOrai(to: string, amount: number, queryId = Date.now()) {
+export async function prepareOrai(to: string, amount: number, queryId: string) {
   const { key, contract } = await payoutWallet();
   const jettonWallet = await oraiJettonWallet(PAYOUT_WALLET);
   const body = beginCell()
     .storeUint(0xf8a7ea5, 32)
-    .storeUint(queryId, 64)
+    .storeUint(BigInt(queryId), 64)
     .storeCoins(toNano(amount.toFixed(9)))
     .storeAddress(Address.parse(to))
     .storeAddress(Address.parse(PAYOUT_WALLET))
@@ -57,13 +61,13 @@ export async function sendOrai(to: string, amount: number, queryId = Date.now())
   if (typeof seqno !== "number") throw new Error("Payout wallet is not active");
   const transfer = contract.createTransfer({ seqno, secretKey: key.secretKey, sendMode: SendMode.PAY_GAS_SEPARATELY, messages: [internal({ to: jettonWallet, value: toNano("0.05"), body })] });
   const boc = beginCell().store(storeMessage(external({ to: contract.address, body: transfer }))).endCell().toBoc().toString("base64");
-  let broadcast = await fetch("https://toncenter.com/api/v3/message", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ boc }) });
-  for (let attempt = 0; broadcast.status === 429 && attempt < 3; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1)));
-    broadcast = await fetch("https://toncenter.com/api/v3/message", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ boc }) });
-  }
-  if (!broadcast.ok) throw new Error(`Broadcast failed [${broadcast.status}]: ${await broadcast.text()}`);
-  return { seqno, queryId };
+  return { seqno, queryId, boc };
+}
+
+export async function broadcastOrai(boc: string) {
+  const response = await fetch("https://toncenter.com/api/v3/message", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ boc }) });
+  if (!response.ok) throw new Error(`Broadcast failed [${response.status}]: ${await response.text()}`);
+  return { ok: true };
 }
 
 /** Mints the next item of the owner's NFT collection straight to the buyer's wallet. */
